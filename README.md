@@ -1,56 +1,63 @@
-# Welcome to your Expo app 👋
+# Tech Challenge 4
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App mobile (Expo / React Native) de posts educacionais para alunos e professores. Todos leem e buscam posts. Professores criam, editam e excluem os próprios posts, e o admin gerencia qualquer post. Os dados vêm da API do Tech Challenge 3.
 
-## Get started
+## Pré-requisitos
 
-1. Install dependencies
+- Node.js e npm
+- App **Expo Go** no celular (mesma rede Wi-Fi do computador)
+- API do Tech Challenge 3 rodando e acessível na rede local:
 
-   ```bash
-   npm install
-   ```
+  ```bash
+  # no projeto techchallenge-3
+  npx next dev -H 0.0.0.0
+  ```
 
-2. Start the app
+  A API precisa ter os ajustes usados por este app: campo `category` nos posts, busca `q` também pelo nome do autor, posts ordenados do mais novo para o mais antigo e `user` (`id`, `name`, `role`, `authorId`) na resposta do login.
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Configuração
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+No `.env`, troque o IP pelo IP do seu computador na rede local (no Windows, `ipconfig`). `localhost` não funciona no celular.
 
-### Other setup steps
+```
+EXPO_PUBLIC_API_URL=http://192.168.0.10:3000
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Comandos
 
-## Learn more
+```bash
+npx expo start      # servidor de desenvolvimento (escaneie o QR code no Expo Go)
+npm start           # o mesmo, via túnel (quando o celular não está na mesma rede)
+npm test            # testes unitários (Jest)
+npx expo lint       # lint
+npx tsc --noEmit    # checagem de tipos
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Telas
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Rota | Tela |
+|---|---|
+| `/` | Lista de posts com busca por título, texto e autor |
+| `/post/[id]` | Post completo; editar e excluir para o dono ou admin |
+| `/post/novo` | Criar post (professor) |
+| `/post/[id]/editar` | Editar post |
+| `/login` | Login com a mesma conta do site do Tech Challenge 3 |
 
-## Join the community
+## Estrutura
 
-Join our community of developers creating universal apps.
+```
+src/app/         telas (Expo Router)
+src/components/  peças visuais
+src/hooks/       carregamento de dados
+src/api/         chamadas HTTP à API
+src/auth/        sessão e login
+src/lib/         regras puras (com testes)
+src/theme.ts     cores, matérias, fontes
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Design e plano: `docs/superpowers/specs/` e `docs/superpowers/plans/`.
