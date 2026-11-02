@@ -1,9 +1,37 @@
-import { Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { useEffect } from 'react';
 
-export default function Placeholder() {
+import { createPost } from '@/api/posts';
+import type { PostInput } from '@/api/types';
+import { useAuth } from '@/auth/AuthContext';
+import { PostForm } from '@/components/PostForm';
+import { useHandleApiError } from '@/hooks/useAuthGuard';
+import { canCreatePost } from '@/lib/post';
+
+const EMPTY: PostInput = { title: '', text: '', category: 'GERAL' };
+
+export default function NewPost() {
+  const { user, token } = useAuth();
+  const handleApiError = useHandleApiError();
+
+  useEffect(() => {
+    if (!canCreatePost(user)) router.replace('/login');
+  }, [user]);
+
+  async function submit(input: PostInput) {
+    if (!token) {
+      router.replace('/login');
+      return;
+    }
+    try {
+      await createPost(input, token);
+      router.back();
+    } catch (err) {
+      if (!handleApiError(err)) throw err;
+    }
+  }
+
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: '#fff' }}>Em construção</Text>
-    </View>
+    <PostForm title="Novo post" submitLabel="Publicar" initial={EMPTY} onSubmit={submit} onClose={() => router.back()} />
   );
 }
