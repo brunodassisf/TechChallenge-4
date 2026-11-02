@@ -6,9 +6,10 @@ const aluno: SessionUser = { id: 'u2', name: 'Bia', role: 'STUDENT', authorId: n
 const admin: SessionUser = { id: 'u3', name: 'Adm', role: 'ADMIN', authorId: null };
 
 describe('permissões', () => {
-  it('professor e admin criam; aluno e visitante não', () => {
+  it('só quem tem perfil de autor cria (a API recusa admin sem Author)', () => {
     expect(canCreatePost(prof)).toBe(true);
-    expect(canCreatePost(admin)).toBe(true);
+    expect(canCreatePost(admin)).toBe(false);
+    expect(canCreatePost({ ...admin, authorId: 'a9' })).toBe(true);
     expect(canCreatePost(aluno)).toBe(false);
     expect(canCreatePost(null)).toBe(false);
   });

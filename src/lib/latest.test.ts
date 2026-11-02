@@ -16,7 +16,17 @@ describe('createLatest', () => {
     b.resolve('nova');
     a.resolve('velha');
     expect(await rb).toEqual({ stale: false, value: 'nova' });
-    expect(await ra).toEqual({ stale: true, value: 'velha' });
+    expect(await ra).toEqual({ stale: true });
+  });
+
+  it('falha de uma busca velha não lança: vem marcada como velha', async () => {
+    const latest = createLatest();
+    const a = deferred<string>();
+    const ra = latest(a.promise.then(() => Promise.reject(new Error('velha falhou'))));
+    const rb = latest(Promise.resolve('nova'));
+    a.resolve('x');
+    expect(await rb).toEqual({ stale: false, value: 'nova' });
+    expect(await ra).toEqual({ stale: true });
   });
 
   it('repassa o erro da busca', async () => {

@@ -5,8 +5,9 @@ export function authorName(post: Pick<Post, 'authors'>): string {
   return name ? name : 'Autor desconhecido';
 }
 
+/** A API só aceita criar post de quem tem perfil de Author (admin sem perfil recebe 403). */
 export function canCreatePost(user: SessionUser | null): boolean {
-  return user?.role === 'AUTHOR' || user?.role === 'ADMIN';
+  return !!user?.authorId;
 }
 
 export function canManagePost(user: SessionUser | null, post: Pick<Post, 'authorId'>): boolean {

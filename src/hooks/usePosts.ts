@@ -1,38 +1,28 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useReducer, useState } from 'react';
 
 import { ApiError } from '@/api/client';
 import { listPosts } from '@/api/posts';
-import type { Post } from '@/api/types';
 import { createLatest } from '@/lib/latest';
-
-type Status = 'loading' | 'success' | 'error';
+import { initialPostsState, postsReducer } from './postsState';
 
 export function usePosts(query: string) {
   const [latest] = useState(createLatest);
-  const [status, setStatus] = useState<Status>('loading');
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [state, dispatch] = useReducer(postsReducer, initialPostsState);
 
   const reload = useCallback(
     (opts?: { pull?: boolean }) => {
-      if (opts?.pull) setRefreshing(true);
-      else setStatus((s) => (s === 'success' ? s : 'loading'));
+      dispatch({ type: 'request', pull: !!opts?.pull });
       latest(listPosts(query))
-        .then(({ stale, value }) => {
-          if (stale) return;
-          setPosts(value);
-          setError(null);
-          setStatus('success');
+        .then((res) => {
+          if (res.stale) return;
+          dispatch({ type: 'success', query, posts: res.value });
         })
         .catch((err: unknown) => {
-          setError(err instanceof ApiError ? err.message : 'Algo deu errado.');
-          setStatus('error');
-        })
-        .finally(() => setRefreshing(false));
+          dispatch({ type: 'failure', message: err instanceof ApiError ? err.message : 'Algo deu errado.' });
+        });
     },
     [latest, query],
   );
 
-  return { status, posts, error, refreshing, reload };
+  return { ...state, reload };
 }

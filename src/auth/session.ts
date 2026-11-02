@@ -4,6 +4,11 @@ export type Session = { token: string; expiresAt: string; user: SessionUser };
 
 const ROLES: Role[] = ['ADMIN', 'AUTHOR', 'STUDENT'];
 
+export function isExpired(session: Pick<Session, 'expiresAt'>, now: Date = new Date()): boolean {
+  const t = new Date(session.expiresAt).getTime();
+  return Number.isNaN(t) || t <= now.getTime();
+}
+
 /** Lê a sessão guardada; devolve null se faltar algo, estiver corrompida ou vencida. */
 export function parseStoredSession(raw: string | null, now: Date = new Date()): Session | null {
   if (!raw) return null;

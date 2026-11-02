@@ -1,4 +1,4 @@
-import { parseStoredSession } from './session';
+import { isExpired, parseStoredSession } from './session';
 
 const now = new Date('2026-11-02T12:00:00Z');
 const valid = {
@@ -6,6 +6,14 @@ const valid = {
   expiresAt: '2026-11-09T12:00:00Z',
   user: { id: 'u1', name: 'Ana', role: 'AUTHOR', authorId: 'a1' },
 };
+
+describe('isExpired', () => {
+  it('vence quando expiresAt chega ou é inválido', () => {
+    expect(isExpired({ expiresAt: '2026-11-09T12:00:00Z' }, now)).toBe(false);
+    expect(isExpired({ expiresAt: '2026-11-02T12:00:00Z' }, now)).toBe(true);
+    expect(isExpired({ expiresAt: 'nunca' }, now)).toBe(true);
+  });
+});
 
 describe('parseStoredSession', () => {
   it('aceita sessão válida', () => {

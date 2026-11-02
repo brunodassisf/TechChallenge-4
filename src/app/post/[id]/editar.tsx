@@ -7,15 +7,16 @@ import type { PostInput } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { PostForm } from '@/components/PostForm';
 import { StateMessage } from '@/components/StateMessage';
-import { useHandleApiError } from '@/hooks/useAuthGuard';
+import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { usePost } from '@/hooks/usePost';
 import { canManagePost } from '@/lib/post';
 import { colors, getCategory } from '@/theme';
 
 export default function EditPost() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const handleApiError = useHandleApiError();
+  const requireToken = useRequireToken();
   const { status, post, error, reload } = usePost(id);
 
   useEffect(() => reload(), [reload]);
@@ -43,10 +44,8 @@ export default function EditPost() {
   }
 
   async function submit(input: PostInput) {
-    if (!token) {
-      router.replace('/login');
-      return;
-    }
+    const token = requireToken();
+    if (!token) return;
     try {
       await updatePost(id, input, token);
       router.back();

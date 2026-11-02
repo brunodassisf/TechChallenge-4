@@ -5,24 +5,23 @@ import { createPost } from '@/api/posts';
 import type { PostInput } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { PostForm } from '@/components/PostForm';
-import { useHandleApiError } from '@/hooks/useAuthGuard';
+import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { canCreatePost } from '@/lib/post';
 
 const EMPTY: PostInput = { title: '', text: '', category: 'GERAL' };
 
 export default function NewPost() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const handleApiError = useHandleApiError();
+  const requireToken = useRequireToken();
 
   useEffect(() => {
     if (!canCreatePost(user)) router.replace('/login');
   }, [user]);
 
   async function submit(input: PostInput) {
-    if (!token) {
-      router.replace('/login');
-      return;
-    }
+    const token = requireToken();
+    if (!token) return;
     try {
       await createPost(input, token);
       router.back();

@@ -98,7 +98,7 @@ Mockups aprovados em `.superpowers/brainstorm/417-1793627002/content/` (`home-v3
 
 ### Telas
 
-1. **Inicial** (`/`): título "Tech Challenge" + "4" em amarelo; botão "Entrar" no topo direito (logado: iniciais do nome, toque abre opção "Sair"); campo de busca em pílula; lista de cards (etiqueta da matéria, título, descrição de 2 linhas cortada com reticências, nome do autor); botão flutuante "+ Novo post" só para `AUTHOR` e `ADMIN`.
+1. **Inicial** (`/`): título "Tech Challenge" + "4" em amarelo; botão "Entrar" no topo direito (logado: iniciais do nome, toque abre opção "Sair"); campo de busca em pílula; lista de cards (etiqueta da matéria, título, descrição de 2 linhas cortada com reticências, nome do autor); botão flutuante "+ Novo post" só para quem tem perfil de professor (`user.authorId` preenchido), porque a API recusa criação (403) de quem não tem `Author`, inclusive admin.
    - Estados: carregando (3 blocos pulsando), lista, buscando (contagem "N resultados para 'x'" e termo destacado no texto visível), busca sem resultado ("Nada por aqui" + "Limpar busca"), erro ("Sem conexão com o servidor" + "Tentar de novo"), lista vazia sem busca ("Ainda não há posts").
    - Busca dispara 300 ms após parar de digitar. Puxar para baixo recarrega.
    - Descrição curta = início do `text`, com espaços e quebras de linha colapsados, limitada a 2 linhas pelo componente.

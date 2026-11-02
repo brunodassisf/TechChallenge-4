@@ -10,7 +10,7 @@ import { CategoryTag } from '@/components/CategoryTag';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { IconButton } from '@/components/IconButton';
 import { StateMessage } from '@/components/StateMessage';
-import { useHandleApiError } from '@/hooks/useAuthGuard';
+import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { usePost } from '@/hooks/usePost';
 import { formatDate } from '@/lib/formatDate';
 import { authorName, canManagePost } from '@/lib/post';
@@ -18,8 +18,9 @@ import { colors, fonts, getCategory, radius, space } from '@/theme';
 
 export default function PostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const handleApiError = useHandleApiError();
+  const requireToken = useRequireToken();
   const { status, post, error, reload } = usePost(id);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -32,7 +33,12 @@ export default function PostScreen() {
   }
 
   async function confirmDelete() {
-    if (!post || !token) return;
+    if (!post) return;
+    const token = requireToken();
+    if (!token) {
+      setConfirming(false);
+      return;
+    }
     setDeleting(true);
     try {
       await deletePost(post.id, token);
@@ -78,7 +84,7 @@ export default function PostScreen() {
   const canManage = canManagePost(user, post);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.nav}>
           <IconButton label="←" onPress={back} accessibilityLabel="Voltar" />

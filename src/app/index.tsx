@@ -1,7 +1,7 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState, type ReactElement } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/auth/AuthContext';
 import { PostCard } from '@/components/PostCard';
@@ -17,17 +17,18 @@ import { colors, fonts, radius, space } from '@/theme';
 
 export default function Home() {
   const { user, signOut } = useAuth();
+  // O aviso vem como parâmetro de rota (ex.: depois de excluir). A tela já pode
+  // estar montada, então o toast lê o parâmetro direto, sem copiar para estado.
   const { aviso } = useLocalSearchParams<{ aviso?: string }>();
-  const [toast, setToast] = useState<string | null>(aviso ?? null);
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const query = useDebouncedValue(search, 300).trim();
-  const { status, posts, error, refreshing, reload } = usePosts(query);
+  const { status, posts, resultQuery, error, refreshing, reload } = usePosts(query);
 
   // Roda ao focar a tela e sempre que a busca (query) muda.
   useFocusEffect(useCallback(() => reload(), [reload]));
 
   const hideToast = useCallback(() => {
-    setToast(null);
     router.setParams({ aviso: undefined });
   }, []);
 
@@ -59,9 +60,9 @@ export default function Home() {
         <Text style={styles.titleAccent}>4</Text>
       </Text>
       <SearchBar value={search} onChangeText={setSearch} />
-      {status === 'success' && query !== '' && posts.length > 0 && (
+      {status === 'success' && resultQuery !== '' && posts.length > 0 && (
         <Text style={styles.count}>
-          {posts.length} {posts.length === 1 ? 'resultado' : 'resultados'} para “{query}”
+          {posts.length} {posts.length === 1 ? 'resultado' : 'resultados'} para “{resultQuery}”
         </Text>
       )}
     </View>
@@ -86,12 +87,12 @@ export default function Home() {
         onAction={() => reload()}
       />
     );
-  } else if (query !== '') {
+  } else if (resultQuery !== '') {
     empty = (
       <StateMessage
         emoji="🔭"
         title="Nada por aqui"
-        message={`Nenhum post fala de “${query}”. Tente outra palavra.`}
+        message={`Nenhum post fala de “${resultQuery}”. Tente outra palavra.`}
         actionLabel="Limpar busca"
         onAction={() => setSearch('')}
       />
@@ -110,31 +111,35 @@ export default function Home() {
         renderItem={({ item }) => (
           <PostCard
             post={item}
-            term={query}
+            term={resultQuery}
             onPress={() => router.push({ pathname: '/post/[id]', params: { id: item.id } })}
           />
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => reload({ pull: true })} tintColor={colors.text} />
         }
       />
       {canCreatePost(user) && (
-        <Pressable style={styles.fab} onPress={() => router.push('/post/novo')} accessibilityRole="button">
+        <Pressable
+          style={[styles.fab, { bottom: 24 + insets.bottom }]}
+          onPress={() => router.push('/post/novo')}
+          accessibilityRole="button"
+        >
           <Text style={styles.fabText}>＋ Novo post</Text>
         </Pressable>
       )}
-      <Toast message={toast} onHide={hideToast} />
+      <Toast message={aviso ?? null} onHide={hideToast} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: space.lg, paddingBottom: 100 },
+  content: { paddingHorizontal: space.lg },
   top: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: space.sm, marginBottom: 6 },
   account: { backgroundColor: colors.text, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
   avatar: {
@@ -152,7 +157,6 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 18,
-    bottom: 24,
     height: 52,
     paddingHorizontal: 20,
     borderRadius: radius.pill,

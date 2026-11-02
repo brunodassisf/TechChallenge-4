@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts, radius } from '@/theme';
 import { PrimaryButton } from './PrimaryButton';
@@ -14,10 +15,11 @@ type Props = {
 };
 
 export function ConfirmSheet({ visible, title, message, confirmLabel, onConfirm, onCancel, loading }: Props) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
       <Pressable style={styles.dim} onPress={onCancel} accessibilityLabel="Fechar" />
-      <View style={styles.sheet}>
+      <View style={[styles.sheet, { paddingBottom: 34 + insets.bottom }]}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
         <PrimaryButton label={confirmLabel} onPress={onConfirm} loading={loading} tone="danger" />
@@ -36,7 +38,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.hero,
     borderTopRightRadius: radius.hero,
     padding: 18,
-    paddingBottom: 34,
   },
   title: { fontFamily: fonts.display800, fontSize: 20, color: colors.text, marginBottom: 6 },
   message: { fontFamily: fonts.body400, fontSize: 13, lineHeight: 19, color: colors.textMuted, marginBottom: 18 },

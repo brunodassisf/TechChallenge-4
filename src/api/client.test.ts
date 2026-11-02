@@ -60,6 +60,33 @@ describe('apiRequest', () => {
     await expect(apiRequest('/api/post')).rejects.toMatchObject({ status: 500, message: 'Erro 500 no servidor.' });
   });
 
+  it('2xx com corpo não-JSON (portal de Wi-Fi) vira ApiError', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <');
+      },
+    } as unknown as Response);
+    await expect(apiRequest('/api/post')).rejects.toMatchObject({ status: 200, message: 'Resposta inválida do servidor.' });
+  });
+
+  it('servidor que não responde vira ApiError status 0 depois do timeout', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockImplementation(
+      (_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => reject(new Error('Aborted')));
+        }),
+    );
+    const p = apiRequest('/api/post').catch((e) => e);
+    jest.advanceTimersByTime(15000);
+    const err = await p;
+    jest.useRealTimers();
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err).toMatchObject({ status: 0, message: 'Sem conexão com o servidor.' });
+  });
+
   it('falha de rede vira ApiError status 0', async () => {
     fetchMock.mockRejectedValue(new TypeError('Network request failed'));
     const err = await apiRequest('/api/post').catch((e) => e);

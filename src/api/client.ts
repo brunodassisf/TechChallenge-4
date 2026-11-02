@@ -10,6 +10,9 @@ export class ApiError extends Error {
   }
 }
 
+export const REQUEST_TIMEOUT_MS = 15000;
+export const INVALID_RESPONSE = 'Resposta inválida do servidor.';
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
@@ -39,6 +42,10 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
 
+  // Sem timeout, o Android espera indefinidamente por um host inalcançável.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   let res: Response;
   try {
     res = await fetch(url, {
@@ -47,12 +54,24 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
       // A API também define cookie de sessão; o app usa só o token.
       credentials: 'omit',
+      signal: controller.signal,
     });
   } catch {
     throw new ApiError(0, 'Sem conexão com o servidor.');
+  } finally {
+    clearTimeout(timer);
   }
 
-  const data: unknown = await res.json().catch(() => null);
+  const parsed: { ok: true; data: unknown } | { ok: false } = await res
+    .json()
+    .then((data: unknown) => ({ ok: true as const, data }))
+    .catch(() => ({ ok: false as const }));
+  const data = parsed.ok ? parsed.data : null;
+
+  if (res.ok && !parsed.ok) {
+    // Ex.: portal de Wi-Fi ou outro servidor respondendo HTML com 200.
+    throw new ApiError(res.status, INVALID_RESPONSE);
+  }
 
   if (!res.ok) {
     const obj = (data && typeof data === 'object' ? data : {}) as {

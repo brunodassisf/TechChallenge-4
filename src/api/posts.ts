@@ -1,8 +1,10 @@
-import { apiRequest } from './client';
+import { ApiError, apiRequest, INVALID_RESPONSE } from './client';
 import type { Post, PostInput } from './types';
 
-export function listPosts(q?: string): Promise<Post[]> {
-  return apiRequest<Post[]>('/api/post', { query: { q } });
+export async function listPosts(q?: string): Promise<Post[]> {
+  const data = await apiRequest<unknown>('/api/post', { query: { q } });
+  if (!Array.isArray(data)) throw new ApiError(200, INVALID_RESPONSE);
+  return data as Post[];
 }
 
 export function getPost(id: string): Promise<Post> {
