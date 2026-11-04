@@ -100,3 +100,24 @@ describe('apiRequest', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('ApiError.body', () => {
+  it('guarda o corpo JSON da resposta de erro', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: 'Tem posts.', postCount: 3 }),
+    } as Response);
+    await expect(apiRequest('/x')).rejects.toMatchObject({ status: 409, body: { error: 'Tem posts.', postCount: 3 } });
+  });
+  it('corpo que não é JSON vira null', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => {
+        throw new SyntaxError('html');
+      },
+    } as unknown as Response);
+    await expect(apiRequest('/x')).rejects.toMatchObject({ status: 409, body: null });
+  });
+});

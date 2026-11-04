@@ -29,3 +29,14 @@ export type LoginResponse = {
   expiresAt: string;
   user: SessionUser;
 };
+
+export type AuthorSummary = {
+  id: string;
+  name: string;
+  userId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  postCount: number;
+};
+
+export type AuthorInput = { name: string; email: string; password: string };

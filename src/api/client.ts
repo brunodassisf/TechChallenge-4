@@ -1,12 +1,15 @@
 export class ApiError extends Error {
   status: number;
   fieldErrors?: Record<string, string[]>;
+  /** Corpo JSON da resposta de erro (ou null quando não era JSON). */
+  body: unknown;
 
-  constructor(status: number, message: string, fieldErrors?: Record<string, string[]>) {
+  constructor(status: number, message: string, fieldErrors?: Record<string, string[]>, body: unknown = null) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.fieldErrors = fieldErrors;
+    this.body = body;
   }
 }
 
@@ -87,7 +90,7 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
           : res.status >= 500
             ? `Erro ${res.status} no servidor.`
             : `Erro ${res.status}.`;
-    throw new ApiError(res.status, message, fieldErrors);
+    throw new ApiError(res.status, message, fieldErrors, data);
   }
 
   return data as T;
