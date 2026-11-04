@@ -47,6 +47,19 @@ npx tsc --noEmit    # checagem de tipos
 | `/post/novo` | Criar post (professor) |
 | `/post/[id]/editar` | Editar post |
 | `/login` | Login com a mesma conta do site do Tech Challenge 3 |
+| `/admin` | Painel de professores (só ADMIN) |
+| `/admin/novo` | Cadastrar professor (só ADMIN) |
+| `/admin/[id]/renomear` | Renomear professor (só ADMIN) |
+
+## Área de administração
+
+Quem entra com uma conta **ADMIN** vai direto para o **Painel** (`/admin`), onde lista, cadastra, renomeia e remove professores. Aluno e professor não conseguem abrir o Painel: o app manda de volta para a lista de posts.
+
+- **Ver posts** abre a lista normal. Lá, o botão com as iniciais tem a opção **Painel** para voltar.
+- Professor com posts não pode ser removido. Exclua ou transfira os posts antes.
+- Remover um professor apaga também a conta de login dele.
+
+Depende dos ajustes da API do Tech Challenge 3: `postCount` em `GET /api/author`, 409 em `DELETE /api/author/:id` quando há posts, e 401 (sem sessão) / 403 (sem permissão) nas rotas de escrita.
 
 ## Estrutura
 
