@@ -6,3 +6,9 @@ export function formatDate(iso: string): string {
   if (Number.isNaN(d.getTime())) return '';
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
+
+export function formatMonthYear(iso: string): string {
+  const d = new Date(iso);
+  if (!iso || Number.isNaN(d.getTime())) return '';
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
