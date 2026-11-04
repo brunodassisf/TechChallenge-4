@@ -11,12 +11,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
+import { isAdmin } from '@/lib/admin';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootStack() {
-  const { ready } = useAuth();
+  const { ready, user } = useAuth();
   const [fontsLoaded, fontError] = useFonts({
     BricolageGrotesque_500Medium,
     BricolageGrotesque_700Bold,
@@ -42,6 +43,11 @@ function RootStack() {
         <Stack.Screen name="post/novo" options={{ presentation: 'modal' }} />
         <Stack.Screen name="post/[id]/index" />
         <Stack.Screen name="post/[id]/editar" options={{ presentation: 'modal' }} />
+        <Stack.Protected guard={isAdmin(user)}>
+          <Stack.Screen name="admin/index" />
+          <Stack.Screen name="admin/novo" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="admin/[id]/renomear" options={{ presentation: 'modal' }} />
+        </Stack.Protected>
       </Stack>
     </>
   );
