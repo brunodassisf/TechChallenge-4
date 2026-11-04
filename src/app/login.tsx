@@ -1,17 +1,27 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
+import type { SessionUser } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { Field } from '@/components/Field';
 import { IconButton } from '@/components/IconButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { homeRouteFor } from '@/lib/admin';
 import { colors, fonts, space } from '@/theme';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+  const [signedIn, setSignedIn] = useState<SessionUser | null>(null);
+
+  // Navega só depois que o contexto já tem o usuário novo (o guard do /admin depende dele).
+  useEffect(() => {
+    if (!signedIn || user?.id !== signedIn.id) return;
+    if (homeRouteFor(signedIn) === '/admin') router.dismissTo('/admin');
+    else router.back();
+  }, [signedIn, user]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,8 +33,7 @@ export default function Login() {
     setError(null);
     setFieldErrors({});
     try {
-      await signIn(email, password);
-      router.back();
+      setSignedIn(await signIn(email, password));
     } catch (err) {
       if (err instanceof ApiError) {
         setFieldErrors(err.fieldErrors ?? {});

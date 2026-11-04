@@ -5,10 +5,10 @@ import {
 } from '@expo-google-fonts/bricolage-grotesque';
 import { Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { isAdmin } from '@/lib/admin';
@@ -31,6 +31,16 @@ function RootStack() {
   useEffect(() => {
     if (done) SplashScreen.hideAsync();
   }, [done]);
+
+  const navReady = !!useRootNavigationState()?.key;
+  const startChecked = useRef(false);
+
+  // Só na abertura do app: admin já logado começa no Painel.
+  useEffect(() => {
+    if (!done || !navReady || startChecked.current) return;
+    startChecked.current = true;
+    if (isAdmin(user)) router.replace('/admin');
+  }, [done, navReady, user]);
 
   if (!done) return null;
 

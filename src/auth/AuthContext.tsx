@@ -10,7 +10,7 @@ type AuthValue = {
   session: Session | null;
   user: SessionUser | null;
   token: string | null;
-  signIn(email: string, password: string): Promise<void>;
+  signIn(email: string, password: string): Promise<SessionUser>;
   signOut(): Promise<void>;
 };
 
@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next: Session = { token: res.token, expiresAt: res.expiresAt, user: res.user };
     setSession(next);
     await saveRaw(JSON.stringify(next)).catch(() => {});
+    return res.user;
   }, []);
 
   const signOut = useCallback(async () => {
