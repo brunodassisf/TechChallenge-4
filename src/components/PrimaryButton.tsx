@@ -2,12 +2,14 @@ import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { colors, fonts, radius } from '@/theme';
 
+const TONES = { accent: colors.accent, danger: colors.danger, admin: colors.admin } as const;
+
 type Props = {
   label: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
-  tone?: 'accent' | 'danger';
+  tone?: 'accent' | 'danger' | 'admin';
 };
 
 export function PrimaryButton({ label, onPress, loading, disabled, tone = 'accent' }: Props) {
@@ -20,7 +22,7 @@ export function PrimaryButton({ label, onPress, loading, disabled, tone = 'accen
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       style={({ pressed }) => [
         styles.btn,
-        { backgroundColor: tone === 'danger' ? colors.danger : colors.accent },
+        { backgroundColor: TONES[tone] },
         (pressed || off) && { opacity: 0.7 },
       ]}
     >

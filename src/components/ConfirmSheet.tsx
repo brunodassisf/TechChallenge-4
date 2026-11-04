@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,24 +8,45 @@ import { PrimaryButton } from './PrimaryButton';
 type Props = {
   visible: boolean;
   title: string;
-  message: string;
-  confirmLabel: string;
-  onConfirm: () => void;
+  message?: string;
+  children?: ReactNode;
+  /** Sem confirmLabel/onConfirm o sheet só tem o botão de fechar. */
+  confirmLabel?: string;
+  onConfirm?: () => void;
+  cancelLabel?: string;
   onCancel: () => void;
   loading?: boolean;
 };
 
-export function ConfirmSheet({ visible, title, message, confirmLabel, onConfirm, onCancel, loading }: Props) {
+export function ConfirmSheet({
+  visible,
+  title,
+  message,
+  children,
+  confirmLabel,
+  onConfirm,
+  cancelLabel = 'Cancelar',
+  onCancel,
+  loading,
+}: Props) {
   const insets = useSafeAreaInsets();
+  const close = () => {
+    if (!loading) onCancel();
+  };
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-      <Pressable style={styles.dim} onPress={onCancel} accessibilityLabel="Fechar" />
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
+      <Pressable style={styles.dim} onPress={close} accessibilityLabel="Fechar" />
       <View style={[styles.sheet, { paddingBottom: 34 + insets.bottom }]}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.message}>{message}</Text>
-        <PrimaryButton label={confirmLabel} onPress={onConfirm} loading={loading} tone="danger" />
-        <Pressable onPress={onCancel} style={styles.cancel} accessibilityRole="button" disabled={loading}>
-          <Text style={styles.cancelText}>Cancelar</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          {title}
+        </Text>
+        {message ? <Text style={styles.message}>{message}</Text> : null}
+        {children}
+        {confirmLabel && onConfirm ? (
+          <PrimaryButton label={confirmLabel} onPress={onConfirm} loading={loading} tone="danger" />
+        ) : null}
+        <Pressable onPress={close} style={styles.cancel} accessibilityRole="button" disabled={loading}>
+          <Text style={styles.cancelText}>{cancelLabel}</Text>
         </Pressable>
       </View>
     </Modal>

@@ -38,6 +38,7 @@ export const colors = {
   accent: '#FFD84D',
   danger: '#FF8A7A',
   success: '#8CF0C6',
+  admin: '#C3A6FF',
 } as const;
 
 // Nomes = chaves passadas ao useFonts no _layout.
