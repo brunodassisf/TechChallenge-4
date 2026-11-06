@@ -37,6 +37,8 @@ export type AuthorSummary = {
   createdAt: string;
   updatedAt: string;
   postCount: number;
+  /** false = conta de login desativada. */
+  active: boolean;
 };
 
 export type AuthorInput = { name: string; email: string; password: string };

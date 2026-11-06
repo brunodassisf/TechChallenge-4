@@ -20,28 +20,44 @@ function readPostCount(body: unknown): number | null {
   return null;
 }
 
+type RawAuthor = Omit<AuthorSummary, 'postCount' | 'active'> & { postCount?: unknown; active?: unknown };
+
+// Antes dos ajustes no TC-3 a API não mandava postCount/active: 0 posts e ativo.
+function normalizeAuthor(a: RawAuthor): AuthorSummary {
+  return {
+    ...a,
+    postCount: typeof a.postCount === 'number' ? a.postCount : 0,
+    active: typeof a.active === 'boolean' ? a.active : true,
+  };
+}
+
 export async function listAuthors(): Promise<AuthorSummary[]> {
   const data = await apiRequest<unknown>('/api/author');
   if (!Array.isArray(data)) throw new ApiError(200, INVALID_RESPONSE);
-  // Antes do ajuste no TC-3 a lista vem sem postCount: trata como 0 e deixa o 409 da API proteger a remoção.
-  return (data as (Omit<AuthorSummary, 'postCount'> & { postCount?: unknown })[]).map((a) => ({
-    ...a,
-    postCount: typeof a.postCount === 'number' ? a.postCount : 0,
-  }));
+  return (data as RawAuthor[]).map(normalizeAuthor);
 }
 
 export async function createAuthor(input: AuthorInput, token: string): Promise<AuthorSummary> {
-  const res = await apiRequest<{ data: AuthorSummary }>('/api/author', { method: 'POST', body: input, token });
-  return res.data;
+  const res = await apiRequest<{ data: RawAuthor }>('/api/author', { method: 'POST', body: input, token });
+  return normalizeAuthor(res.data);
 }
 
 export async function renameAuthor(id: string, name: string, token: string): Promise<AuthorSummary> {
-  const res = await apiRequest<{ data: AuthorSummary }>(`/api/author/${encodeURIComponent(id)}`, {
+  const res = await apiRequest<{ data: RawAuthor }>(`/api/author/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: { name },
     token,
   });
-  return res.data;
+  return normalizeAuthor(res.data);
+}
+
+export async function setAuthorActive(id: string, active: boolean, token: string): Promise<AuthorSummary> {
+  const res = await apiRequest<{ data: RawAuthor }>(`/api/author/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    body: { active },
+    token,
+  });
+  return normalizeAuthor(res.data);
 }
 
 export async function deleteAuthor(id: string, token: string): Promise<void> {

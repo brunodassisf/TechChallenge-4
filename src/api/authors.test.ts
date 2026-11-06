@@ -1,4 +1,4 @@
-import { AuthorHasPostsError, deleteAuthor, listAuthors } from './authors';
+import { AuthorHasPostsError, deleteAuthor, listAuthors, setAuthorActive } from './authors';
 
 const fetchMock = jest.fn();
 
@@ -21,12 +21,22 @@ describe('listAuthors', () => {
   });
   it('mantém postCount numérico', async () => {
     respond(200, [{ ...base, postCount: 4 }]);
-    await expect(listAuthors()).resolves.toEqual([{ ...base, postCount: 4 }]);
+    await expect(listAuthors()).resolves.toEqual([{ ...base, postCount: 4, active: true }]);
   });
   it('API antiga sem postCount vira 0', async () => {
     respond(200, [base]);
     const [a] = await listAuthors();
     expect(a.postCount).toBe(0);
+  });
+  it('mantém active da API', async () => {
+    respond(200, [{ ...base, postCount: 1, active: false }]);
+    const [a] = await listAuthors();
+    expect(a.active).toBe(false);
+  });
+  it('API antiga sem active vira ativo', async () => {
+    respond(200, [base]);
+    const [a] = await listAuthors();
+    expect(a.active).toBe(true);
   });
 });
 
@@ -53,5 +63,23 @@ describe('deleteAuthor', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('http://api.test:3000/api/author/a%201');
     expect(init).toMatchObject({ method: 'DELETE', headers: { Authorization: 'Bearer tk' } });
+  });
+});
+
+describe('setAuthorActive', () => {
+  it('envia PATCH com { active } e devolve o professor normalizado', async () => {
+    respond(200, { data: { ...base, active: false }, message: 'Professor desativado.' });
+    const a = await setAuthorActive('a1', false, 'tk');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test:3000/api/author/a1/status');
+    expect(init).toMatchObject({ method: 'PATCH', body: JSON.stringify({ active: false }) });
+    expect(a).toEqual({ ...base, postCount: 0, active: false });
+  });
+  it('409 sem conta de login vira ApiError com a mensagem', async () => {
+    respond(409, { error: 'Este professor não tem conta de login para desativar.' });
+    await expect(setAuthorActive('a1', false, 'tk')).rejects.toMatchObject({
+      status: 409,
+      message: 'Este professor não tem conta de login para desativar.',
+    });
   });
 });

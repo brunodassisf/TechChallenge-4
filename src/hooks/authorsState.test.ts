@@ -8,6 +8,7 @@ const ana: AuthorSummary = {
   createdAt: '2026-03-01T00:00:00.000Z',
   updatedAt: '2026-03-01T00:00:00.000Z',
   postCount: 2,
+  active: true,
 };
 
 describe('authorsReducer', () => {

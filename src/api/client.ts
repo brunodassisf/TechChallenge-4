@@ -17,7 +17,7 @@ export const REQUEST_TIMEOUT_MS = 15000;
 export const INVALID_RESPONSE = 'Resposta inválida do servidor.';
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   token?: string | null;
   query?: Record<string, string | undefined>;
