@@ -3,19 +3,20 @@ import { useCallback, useState, type ReactElement } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AuthorHasPostsError, deleteAuthor } from '@/api/authors';
+import { AuthorHasPostsError, deleteAuthor, setAuthorActive } from '@/api/authors';
 import { ApiError } from '@/api/client';
 import type { AuthorSummary } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { AuthorActionsSheet } from '@/components/AuthorActionsSheet';
 import { AuthorRow } from '@/components/AuthorRow';
+import { DeactivateAuthorSheet } from '@/components/DeactivateAuthorSheet';
 import { RemoveAuthorSheet } from '@/components/RemoveAuthorSheet';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { StateMessage } from '@/components/StateMessage';
 import { Toast } from '@/components/Toast';
 import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { useAuthors } from '@/hooks/useAuthors';
-import { blockedCount, teacherCountLabel } from '@/lib/admin';
+import { blockedCount, sortAuthors, teacherCountLabel } from '@/lib/admin';
 import { initials } from '@/lib/initials';
 import { colors, fonts, radius, space } from '@/theme';
 
@@ -30,7 +31,10 @@ export default function AdminPanel() {
   const { status, authors, error, refreshing, reload } = useAuthors();
   const [selected, setSelected] = useState<AuthorSummary | null>(null);
   const [removing, setRemoving] = useState<Removing | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [deactivating, setDeactivating] = useState<AuthorSummary | null>(null);
+  const [busy, setBusy] = useState(false);
+  const sorted = sortAuthors(authors);
+  const inactiveCount = authors.filter((a) => !a.active).length;
 
   useFocusEffect(useCallback(() => reload(), [reload]));
 
@@ -59,6 +63,50 @@ export default function AdminPanel() {
     setSelected(null);
   }
 
+  function openDeactivate() {
+    if (!selected) return;
+    setDeactivating(selected);
+    setSelected(null);
+  }
+
+  function reactivateSelected() {
+    if (!selected) return;
+    const author = selected;
+    setSelected(null);
+    changeActive(author, true, () => {});
+  }
+
+  /** 401 → login; 404 → avisa e recarrega; resto → alerta com a mensagem da API. */
+  function showError(err: unknown, title: string) {
+    if (handleApiError(err)) return;
+    if (err instanceof ApiError && err.status === 404) {
+      Alert.alert('Professor não encontrado', 'Ele pode ter sido removido.');
+      reload();
+      return;
+    }
+    Alert.alert(title, err instanceof ApiError ? err.message : 'Tente de novo.');
+  }
+
+  async function changeActive(author: AuthorSummary, active: boolean, close: () => void) {
+    const token = requireToken();
+    if (!token) {
+      close();
+      return;
+    }
+    setBusy(true);
+    try {
+      await setAuthorActive(author.id, active, token);
+      close();
+      router.setParams({ aviso: active ? 'Professor reativado' : 'Professor desativado' });
+      reload();
+    } catch (err) {
+      close();
+      showError(err, active ? 'Não foi possível reativar' : 'Não foi possível desativar');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function confirmRemove() {
     if (!removing) return;
     const token = requireToken();
@@ -66,7 +114,7 @@ export default function AdminPanel() {
       setRemoving(null);
       return;
     }
-    setDeleting(true);
+    setBusy(true);
     try {
       await deleteAuthor(removing.author.id, token);
       setRemoving(null);
@@ -80,15 +128,9 @@ export default function AdminPanel() {
         return;
       }
       setRemoving(null);
-      if (handleApiError(err)) return;
-      if (err instanceof ApiError && err.status === 404) {
-        Alert.alert('Professor não encontrado', 'Ele pode já ter sido removido.');
-        reload();
-        return;
-      }
-      Alert.alert('Não foi possível remover', err instanceof ApiError ? err.message : 'Tente de novo.');
+      showError(err, 'Não foi possível remover');
     } finally {
-      setDeleting(false);
+      setBusy(false);
     }
   }
 
@@ -114,7 +156,7 @@ export default function AdminPanel() {
         Professores
       </Text>
       {status === 'success' && authors.length > 0 && (
-        <Text style={styles.sub}>{teacherCountLabel(authors.length)}</Text>
+        <Text style={styles.sub}>{teacherCountLabel(authors.length, inactiveCount)}</Text>
       )}
     </View>
   );
@@ -149,7 +191,7 @@ export default function AdminPanel() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <FlatList
-        data={showList ? authors : []}
+        data={showList ? sorted : []}
         keyExtractor={(a) => a.id}
         renderItem={({ item, index }) => <AuthorRow author={item} index={index} onPress={() => setSelected(item)} />}
         ListHeaderComponent={header}
@@ -170,14 +212,23 @@ export default function AdminPanel() {
       <AuthorActionsSheet
         author={selected}
         onRename={openRename}
+        onDeactivate={openDeactivate}
+        onReactivate={reactivateSelected}
         onRemove={openRemove}
         onClose={() => setSelected(null)}
+      />
+      <DeactivateAuthorSheet
+        author={deactivating}
+        loading={busy}
+        onConfirm={() => deactivating && changeActive(deactivating, false, () => setDeactivating(null))}
+        onClose={() => setDeactivating(null)}
       />
       <RemoveAuthorSheet
         author={removing?.author ?? null}
         postCount={removing?.postCount ?? 0}
-        loading={deleting}
+        loading={busy}
         onConfirm={confirmRemove}
+        onDeactivate={() => removing && changeActive(removing.author, false, () => setRemoving(null))}
         onClose={() => setRemoving(null)}
       />
       <Toast message={aviso ?? null} onHide={hideToast} />

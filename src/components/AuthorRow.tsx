@@ -12,17 +12,24 @@ export function AuthorRow({ author, index, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
+      style={({ pressed }) => [styles.row, !author.active && styles.inactive, pressed && { opacity: 0.8 }]}
       accessibilityRole="button"
-      accessibilityLabel={`${author.name}, ${subtitle}. Abrir ações`}
+      accessibilityLabel={`${author.name}${author.active ? '' : ', inativo'}, ${subtitle}. Abrir ações`}
     >
       <View style={[styles.avatar, { backgroundColor: avatarColor(index) }]}>
         <Text style={styles.avatarText}>{initials(author.name)}</Text>
       </View>
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
-          {author.name}
-        </Text>
+        <View style={styles.nameRow}>
+          <Text style={[styles.name, styles.nameFlex]} numberOfLines={1}>
+            {author.name}
+          </Text>
+          {!author.active && (
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Inativo</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.sub}>{subtitle}</Text>
       </View>
       <Text style={styles.more}>⋯</Text>
@@ -49,4 +56,9 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.display700, fontSize: 16, color: colors.text },
   sub: { fontFamily: fonts.body400, fontSize: 12, color: colors.textFaint, marginTop: 2 },
   more: { fontSize: 18, color: colors.textFaint },
+  inactive: { opacity: 0.5 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  nameFlex: { flexShrink: 1 },
+  tag: { backgroundColor: colors.subtle, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  tagText: { fontFamily: fonts.body700, fontSize: 10, color: colors.text },
 });

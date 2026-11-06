@@ -11,18 +11,26 @@ type Props = {
   postCount: number;
   loading: boolean;
   onConfirm: () => void;
+  onDeactivate: () => void;
   onClose: () => void;
 };
 
-export function RemoveAuthorSheet({ author, postCount, loading, onConfirm, onClose }: Props) {
+export function RemoveAuthorSheet({ author, postCount, loading, onConfirm, onDeactivate, onClose }: Props) {
   const title = `Remover ${author?.name ?? ''}?`;
   if (postCount > 0) {
     return (
-      <ConfirmSheet visible={!!author} title={title} cancelLabel="Entendi" onCancel={onClose}>
+      <ConfirmSheet
+        visible={!!author}
+        title={title}
+        confirmLabel="Desativar professor"
+        onConfirm={onDeactivate}
+        onCancel={onClose}
+        loading={loading}
+      >
         <View style={styles.warn} accessibilityRole="alert">
           <Text style={styles.warnText}>
-            Esta pessoa tem <Text style={styles.bold}>{postCountLabel(postCount)}</Text>. Exclua ou transfira os posts
-            antes de removê-la.
+            Esta pessoa tem <Text style={styles.bold}>{postCountLabel(postCount)}</Text>. Desative o professor para
+            manter os posts publicados.
           </Text>
         </View>
       </ConfirmSheet>
