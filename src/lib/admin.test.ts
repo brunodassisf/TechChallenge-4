@@ -1,12 +1,14 @@
-import type { SessionUser } from '@/api/types';
+import type { AuthorSummary, SessionUser } from '@/api/types';
 import { CATEGORIES } from '@/theme';
 import {
+  authorActions,
   authorSubtitle,
   avatarColor,
   blockedCount,
   homeRouteFor,
   isAdmin,
   postCountLabel,
+  sortAuthors,
   teacherCountLabel,
 } from './admin';
 
@@ -63,5 +65,52 @@ describe('blockedCount', () => {
   it('sem número da API usa o da lista, no mínimo 1', () => {
     expect(blockedCount(null, 5)).toBe(5);
     expect(blockedCount(null, 0)).toBe(1);
+  });
+});
+
+describe('teacherCountLabel com inativos', () => {
+  it('sem inativos não muda', () => {
+    expect(teacherCountLabel(5, 0)).toBe('5 professores cadastrados');
+  });
+  it('singular e plural de inativos', () => {
+    expect(teacherCountLabel(5, 1)).toBe('5 professores cadastrados · 1 inativo');
+    expect(teacherCountLabel(5, 2)).toBe('5 professores cadastrados · 2 inativos');
+    expect(teacherCountLabel(1, 1)).toBe('1 professor cadastrado · 1 inativo');
+  });
+});
+
+describe('sortAuthors', () => {
+  const mk = (id: string, active: boolean): AuthorSummary => ({
+    id,
+    name: id,
+    userId: null,
+    createdAt: '',
+    updatedAt: '',
+    postCount: 0,
+    active,
+  });
+  it('ativos primeiro, mantendo a ordem da API em cada grupo', () => {
+    const list = [mk('a', false), mk('b', true), mk('c', false), mk('d', true)];
+    expect(sortAuthors(list).map((a) => a.id)).toEqual(['b', 'd', 'a', 'c']);
+  });
+  it('não muta a lista recebida', () => {
+    const list = [mk('a', false), mk('b', true)];
+    sortAuthors(list);
+    expect(list.map((a) => a.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('authorActions', () => {
+  it('ativo com posts', () => {
+    expect(authorActions({ active: true, postCount: 3 })).toEqual(['rename', 'deactivate']);
+  });
+  it('ativo sem posts', () => {
+    expect(authorActions({ active: true, postCount: 0 })).toEqual(['rename', 'deactivate', 'remove']);
+  });
+  it('inativo com posts', () => {
+    expect(authorActions({ active: false, postCount: 3 })).toEqual(['rename', 'reactivate']);
+  });
+  it('inativo sem posts', () => {
+    expect(authorActions({ active: false, postCount: 0 })).toEqual(['rename', 'reactivate', 'remove']);
   });
 });

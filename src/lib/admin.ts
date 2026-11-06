@@ -16,8 +16,10 @@ export function postCountLabel(n: number): string {
   return n === 1 ? '1 post' : `${n} posts`;
 }
 
-export function teacherCountLabel(n: number): string {
-  return n === 1 ? '1 professor cadastrado' : `${n} professores cadastrados`;
+export function teacherCountLabel(total: number, inactive = 0): string {
+  const base = total === 1 ? '1 professor cadastrado' : `${total} professores cadastrados`;
+  if (inactive <= 0) return base;
+  return `${base} · ${inactive === 1 ? '1 inativo' : `${inactive} inativos`}`;
 }
 
 export function authorSubtitle(a: Pick<AuthorSummary, 'postCount' | 'createdAt'>): string {
@@ -36,4 +38,17 @@ export function avatarColor(index: number): string {
 /** Quantos posts mostrar no sheet bloqueado depois de um 409. */
 export function blockedCount(fromApi: number | null, fromList: number): number {
   return fromApi ?? Math.max(fromList, 1);
+}
+
+/** Ativos primeiro; dentro de cada grupo, a ordem da API (alfabética). */
+export function sortAuthors(list: AuthorSummary[]): AuthorSummary[] {
+  return [...list.filter((a) => a.active), ...list.filter((a) => !a.active)];
+}
+
+export type AuthorAction = 'rename' | 'deactivate' | 'reactivate' | 'remove';
+
+export function authorActions(a: Pick<AuthorSummary, 'active' | 'postCount'>): AuthorAction[] {
+  const actions: AuthorAction[] = ['rename', a.active ? 'deactivate' : 'reactivate'];
+  if (a.postCount === 0) actions.push('remove');
+  return actions;
 }
