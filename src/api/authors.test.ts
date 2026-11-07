@@ -1,4 +1,4 @@
-import { AuthorHasPostsError, deleteAuthor, listAuthors, setAuthorActive } from './authors';
+import { AuthorHasPostsError, createAuthor, deleteAuthor, listAuthors, setAuthorActive } from './authors';
 
 const fetchMock = jest.fn();
 
@@ -63,6 +63,16 @@ describe('deleteAuthor', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('http://api.test:3000/api/author/a%201');
     expect(init).toMatchObject({ method: 'DELETE', headers: { Authorization: 'Bearer tk' } });
+  });
+});
+
+describe('createAuthor', () => {
+  it('envia só nome e e-mail', async () => {
+    respond(201, { data: base, message: 'ok' });
+    await createAuthor({ name: 'Ana', email: 'ana@x.com' }, 'tk');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test:3000/api/author');
+    expect(JSON.parse(init.body)).toEqual({ name: 'Ana', email: 'ana@x.com' });
   });
 });
 

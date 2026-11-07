@@ -48,4 +48,4 @@ export type AuthorSummary = {
   active: boolean;
 };
 
-export type AuthorInput = { name: string; email: string; password: string };
+export type AuthorInput = { name: string; email: string };

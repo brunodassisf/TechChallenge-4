@@ -16,7 +16,7 @@ const NO_ERROR: FormError = { error: null, fieldErrors: {} };
 export default function NewAuthor() {
   const handleApiError = useHandleApiError();
   const requireToken = useRequireToken();
-  const [values, setValues] = useState<AuthorInput>({ name: '', email: '', password: '' });
+  const [values, setValues] = useState<AuthorInput>({ name: '', email: '' });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<FormError>(NO_ERROR);
 
@@ -26,7 +26,7 @@ export default function NewAuthor() {
     setSaving(true);
     setFormError(NO_ERROR);
     try {
-      await createAuthor({ name: values.name.trim(), email: values.email.trim(), password: values.password }, token);
+      await createAuthor({ name: values.name.trim(), email: values.email.trim() }, token);
       router.dismissTo({ pathname: '/admin', params: { aviso: 'Professor cadastrado' } });
     } catch (err) {
       if (!handleApiError(err)) setFormError(toFormError(err));
@@ -56,17 +56,8 @@ export default function NewAuthor() {
         textContentType="emailAddress"
         error={fe.email?.[0]}
       />
-      <Field
-        label="Senha inicial"
-        value={values.password}
-        onChangeText={(t) => setValues((v) => ({ ...v, password: t }))}
-        secureTextEntry
-        autoCapitalize="none"
-        textContentType="newPassword"
-        error={fe.password?.[0]}
-      />
       <Text style={styles.hint}>
-        Mínimo de 8 caracteres. Passe a senha para o professor, que entra com ela no app e no site.
+        O professor entra com a senha padrão da escola e cria a própria senha no primeiro acesso.
       </Text>
       <PrimaryButton label="Cadastrar" onPress={submit} loading={saving} tone="admin" />
     </ModalForm>
