@@ -55,7 +55,6 @@ npx tsc --noEmit    # checagem de tipos
 
 Quem entra com uma conta **ADMIN** vai direto para o **Painel** (`/admin`), onde lista, cadastra, renomeia e remove professores. Aluno e professor não conseguem abrir o Painel: o app manda de volta para a lista de posts.
 
-- **Ver posts** abre a lista normal. Lá, o botão com as iniciais tem a opção **Painel** para voltar.
 - Professor pode ser **desativado**: não entra mais no app nem no site, e os posts dele continuam publicados. Dá para **reativar** depois. No Painel, inativos aparecem apagados, no fim da lista.
 - **Remover** só aparece para quem não tem posts.
 - Remover um professor apaga também a conta de login dele.

@@ -137,9 +137,6 @@ export default function AdminPanel() {
   const header = (
     <View>
       <View style={styles.top}>
-        <Pressable onPress={() => router.push('/')} style={styles.pill} accessibilityRole="button">
-          <Text style={styles.pillText}>📚 Ver posts</Text>
-        </Pressable>
         <Pressable
           onPress={onAccountPress}
           style={styles.avatar}
