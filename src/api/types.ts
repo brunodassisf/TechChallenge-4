@@ -30,6 +30,13 @@ export type LoginResponse = {
   user: SessionUser;
 };
 
+export type FirstAccessInput = {
+  email: string;
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+};
+
 export type AuthorSummary = {
   id: string;
   name: string;
