@@ -59,8 +59,9 @@ Quem entra com uma conta **ADMIN** vai direto para o **Painel** (`/admin`), onde
 - Professor pode ser **desativado**: não entra mais no app nem no site, e os posts dele continuam publicados. Dá para **reativar** depois. No Painel, inativos aparecem apagados, no fim da lista.
 - **Remover** só aparece para quem não tem posts.
 - Remover um professor apaga também a conta de login dele.
+- Professor novo entra com a senha padrão da escola (`DEFAULT_TEACHER_PASSWORD` na API) e cria a própria senha no primeiro acesso, pelo app.
 
-Depende dos ajustes da API do Tech Challenge 3: `postCount` em `GET /api/author`, 409 em `DELETE /api/author/:id` quando há posts, e 401 (sem sessão) / 403 (sem permissão) nas rotas de escrita, e `PATCH /api/author/:id/status` para desativar e reativar.
+Depende dos ajustes da API do Tech Challenge 3: `postCount` em `GET /api/author`, 409 em `DELETE /api/author/:id` quando há posts, 401 (sem sessão) / 403 (sem permissão) nas rotas de escrita, `PATCH /api/author/:id/status` para desativar e reativar, `POST /api/author` só com nome e e-mail, `FIRST_ACCESS_REQUIRED` no login e `POST /api/auth/first-access`.
 
 ## Estrutura
 
