@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { isFirstAccessRequired } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import type { SessionUser } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { Field } from '@/components/Field';
+import { FirstAccessForm } from '@/components/FirstAccessForm';
 import { IconButton } from '@/components/IconButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { homeRouteFor } from '@/lib/admin';
@@ -27,6 +29,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  // true depois que a API pede a senha nova; e-mail e senha padrão ficam só neste estado.
+  const [firstAccess, setFirstAccess] = useState(false);
+
+  function restartLogin(message: string) {
+    setFirstAccess(false);
+    setPassword('');
+    setFieldErrors({});
+    setError(message);
+  }
 
   async function submit() {
     setLoading(true);
@@ -35,6 +46,10 @@ export default function Login() {
     try {
       setSignedIn(await signIn(email, password));
     } catch (err) {
+      if (isFirstAccessRequired(err)) {
+        setFirstAccess(true);
+        return;
+      }
       if (err instanceof ApiError) {
         setFieldErrors(err.fieldErrors ?? {});
         if (!err.fieldErrors) setError(err.message);
@@ -50,41 +65,53 @@ export default function Login() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.nav}>
-            <IconButton label="✕" onPress={() => router.back()} accessibilityLabel="Fechar" />
-          </View>
-          <Text style={styles.title} accessibilityRole="header">
-            Tech Challenge{'\n'}
-            <Text style={styles.accent}>4</Text>
-          </Text>
-          <Text style={styles.subtitle}>Entre com a conta da escola.</Text>
-          {error ? (
-            <Text style={styles.error} accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
-          <Field
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            error={fieldErrors.email?.[0]}
-          />
-          <Field
-            label="Senha"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="password"
-            textContentType="password"
-            onSubmitEditing={submit}
-            error={fieldErrors.password?.[0]}
-          />
-          <PrimaryButton label="Entrar" onPress={submit} loading={loading} />
-          <Text style={styles.hint}>A mesma conta do site do Tech Challenge 3.</Text>
+          {firstAccess ? (
+            <FirstAccessForm
+              email={email}
+              currentPassword={password}
+              onDone={setSignedIn}
+              onRestart={restartLogin}
+              onBack={() => setFirstAccess(false)}
+            />
+          ) : (
+            <>
+              <View style={styles.nav}>
+                <IconButton label="✕" onPress={() => router.back()} accessibilityLabel="Fechar" />
+              </View>
+              <Text style={styles.title} accessibilityRole="header">
+                Tech Challenge{'\n'}
+                <Text style={styles.accent}>4</Text>
+              </Text>
+              <Text style={styles.subtitle}>Entre com a conta da escola.</Text>
+              {error ? (
+                <Text style={styles.error} accessibilityRole="alert">
+                  {error}
+                </Text>
+              ) : null}
+              <Field
+                label="E-mail"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                error={fieldErrors.email?.[0]}
+              />
+              <Field
+                label="Senha"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="password"
+                textContentType="password"
+                onSubmitEditing={submit}
+                error={fieldErrors.password?.[0]}
+              />
+              <PrimaryButton label="Entrar" onPress={submit} loading={loading} />
+              <Text style={styles.hint}>A mesma conta do site do Tech Challenge 3.</Text>
+            </>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { login } from '@/api/auth';
-import type { SessionUser } from '@/api/types';
+import { firstAccess, login } from '@/api/auth';
+import type { FirstAccessInput, LoginResponse, SessionUser } from '@/api/types';
 import { parseStoredSession, type Session } from './session';
 import { clearRaw, loadRaw, saveRaw } from './tokenStorage';
 
@@ -11,6 +11,7 @@ type AuthValue = {
   user: SessionUser | null;
   token: string | null;
   signIn(email: string, password: string): Promise<SessionUser>;
+  completeFirstAccess(input: FirstAccessInput): Promise<SessionUser>;
   signOut(): Promise<void>;
 };
 
@@ -36,13 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const res = await login(email, password);
+  const saveSession = useCallback(async (res: LoginResponse) => {
     const next: Session = { token: res.token, expiresAt: res.expiresAt, user: res.user };
     setSession(next);
     await saveRaw(JSON.stringify(next)).catch(() => {});
     return res.user;
   }, []);
+
+  const signIn = useCallback(
+    async (email: string, password: string) => saveSession(await login(email, password)),
+    [saveSession],
+  );
+
+  const completeFirstAccess = useCallback(
+    async (input: FirstAccessInput) => saveSession(await firstAccess(input)),
+    [saveSession],
+  );
 
   const signOut = useCallback(async () => {
     setSession(null);
@@ -56,9 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       token: session?.token ?? null,
       signIn,
+      completeFirstAccess,
       signOut,
     }),
-    [ready, session, signIn, signOut],
+    [ready, session, signIn, completeFirstAccess, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
