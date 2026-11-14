@@ -49,7 +49,7 @@ export function SignUpForm({ onDone, onBack }: Props) {
   return (
     <>
       <View style={styles.nav}>
-        <IconButton label="‹" onPress={onBack} accessibilityLabel="Voltar" />
+        <IconButton label="←" onPress={onBack} accessibilityLabel="Voltar" />
       </View>
       <Text style={styles.title} accessibilityRole="header">
         Criar conta

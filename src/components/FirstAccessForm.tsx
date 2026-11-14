@@ -50,7 +50,7 @@ export function FirstAccessForm({ email, currentPassword, onDone, onRestart, onB
   return (
     <>
       <View style={styles.nav}>
-        <IconButton label="‹" onPress={onBack} accessibilityLabel="Voltar" />
+        <IconButton label="←" onPress={onBack} accessibilityLabel="Voltar" />
       </View>
       <Text style={styles.title} accessibilityRole="header">
         Crie sua senha
