@@ -46,10 +46,16 @@ npx tsc --noEmit    # checagem de tipos
 | `/post/[id]` | Post completo; editar e excluir para o dono ou admin |
 | `/post/novo` | Criar post (professor) |
 | `/post/[id]/editar` | Editar post |
-| `/login` | Login com a mesma conta do site do Tech Challenge 3 |
+| `/login` | Login com a mesma conta do site do Tech Challenge 3; cadastro de estudante ("Cadastre-se") |
 | `/admin` | Painel de professores (só ADMIN) |
 | `/admin/novo` | Cadastrar professor (só ADMIN) |
 | `/admin/[id]/renomear` | Renomear professor (só ADMIN) |
+
+## Cadastro de estudante
+
+Na tela Entrar, "Não tem conta? Cadastre-se" abre a etapa **Criar conta** (nome, e-mail, senha e repetir senha). O estudante escolhe a própria senha, sem senha padrão e sem primeiro acesso, e já sai logado. Estudante só lê posts. Não há confirmação de e-mail.
+
+Depende de `POST /api/student` na API do Tech Challenge 3.
 
 ## Área de administração
 
