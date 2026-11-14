@@ -1,4 +1,4 @@
-import { firstAccess, isFirstAccessRequired } from './auth';
+import { firstAccess, isFirstAccessRequired, signUp } from './auth';
 import { ApiError } from './client';
 
 const fetchMock = jest.fn();
@@ -44,6 +44,29 @@ describe('firstAccess', () => {
     expect(JSON.parse(init.body)).toEqual({
       email: 'ana@x.com',
       currentPassword: 'padrao123',
+      password: 'minhasenha',
+      confirmPassword: 'minhasenha',
+    });
+    expect(res).toEqual(session);
+  });
+});
+
+describe('signUp', () => {
+  it('envia POST /api/student com nome e e-mail sem espaços nas pontas', async () => {
+    const session = { message: 'ok', token: 't', tokenType: 'Bearer', expiresAt: '2026-12-01', user: { id: 'u1' } };
+    fetchMock.mockResolvedValue({ ok: true, status: 201, json: async () => session } as Response);
+    const res = await signUp({
+      name: '  Ana Souza ',
+      email: ' ana@x.com ',
+      password: 'minhasenha',
+      confirmPassword: 'minhasenha',
+    });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test:3000/api/student');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual({
+      name: 'Ana Souza',
+      email: 'ana@x.com',
       password: 'minhasenha',
       confirmPassword: 'minhasenha',
     });

@@ -37,6 +37,13 @@ export type FirstAccessInput = {
   confirmPassword: string;
 };
 
+export type SignUpInput = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
 export type AuthorSummary = {
   id: string;
   name: string;

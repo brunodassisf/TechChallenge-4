@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { firstAccess, login } from '@/api/auth';
-import type { FirstAccessInput, LoginResponse, SessionUser } from '@/api/types';
+import { firstAccess, login, signUp as signUpRequest } from '@/api/auth';
+import type { FirstAccessInput, LoginResponse, SessionUser, SignUpInput } from '@/api/types';
 import { parseStoredSession, type Session } from './session';
 import { clearRaw, loadRaw, saveRaw } from './tokenStorage';
 
@@ -12,6 +12,7 @@ type AuthValue = {
   token: string | null;
   signIn(email: string, password: string): Promise<SessionUser>;
   completeFirstAccess(input: FirstAccessInput): Promise<SessionUser>;
+  signUp(input: SignUpInput): Promise<SessionUser>;
   signOut(): Promise<void>;
 };
 
@@ -54,6 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [saveSession],
   );
 
+  const signUp = useCallback(
+    async (input: SignUpInput) => saveSession(await signUpRequest(input)),
+    [saveSession],
+  );
+
   const signOut = useCallback(async () => {
     setSession(null);
     await clearRaw().catch(() => {});
@@ -67,9 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       token: session?.token ?? null,
       signIn,
       completeFirstAccess,
+      signUp,
       signOut,
     }),
-    [ready, session, signIn, completeFirstAccess, signOut],
+    [ready, session, signIn, completeFirstAccess, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

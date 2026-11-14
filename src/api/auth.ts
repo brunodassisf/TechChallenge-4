@@ -1,5 +1,5 @@
 import { ApiError, apiRequest } from './client';
-import type { FirstAccessInput, LoginResponse } from './types';
+import type { FirstAccessInput, LoginResponse, SignUpInput } from './types';
 
 export function login(email: string, password: string): Promise<LoginResponse> {
   return apiRequest<LoginResponse>('/api/auth/login', {
@@ -12,6 +12,14 @@ export function firstAccess(input: FirstAccessInput): Promise<LoginResponse> {
   return apiRequest<LoginResponse>('/api/auth/first-access', {
     method: 'POST',
     body: { ...input, email: input.email.trim() },
+  });
+}
+
+/** Cadastro de estudante: a resposta é a mesma do login (201). */
+export function signUp(input: SignUpInput): Promise<LoginResponse> {
+  return apiRequest<LoginResponse>('/api/student', {
+    method: 'POST',
+    body: { ...input, name: input.name.trim(), email: input.email.trim() },
   });
 }
 
