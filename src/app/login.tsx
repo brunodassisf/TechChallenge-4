@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { isFirstAccessRequired } from '@/api/auth';
@@ -11,6 +11,7 @@ import { Field } from '@/components/Field';
 import { FirstAccessForm } from '@/components/FirstAccessForm';
 import { IconButton } from '@/components/IconButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { SignUpForm } from '@/components/SignUpForm';
 import { homeRouteFor } from '@/lib/admin';
 import { colors, fonts, space } from '@/theme';
 
@@ -29,11 +30,17 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  // true depois que a API pede a senha nova; e-mail e senha padrão ficam só neste estado.
-  const [firstAccess, setFirstAccess] = useState(false);
+  // 'firstAccess' depois que a API pede a senha nova; e-mail e senha padrão ficam só neste estado.
+  const [step, setStep] = useState<'login' | 'firstAccess' | 'signUp'>('login');
+
+  function openSignUp() {
+    setError(null);
+    setFieldErrors({});
+    setStep('signUp');
+  }
 
   function restartLogin(message: string) {
-    setFirstAccess(false);
+    setStep('login');
     setPassword('');
     setFieldErrors({});
     setError(message);
@@ -47,7 +54,7 @@ export default function Login() {
       setSignedIn(await signIn(email, password));
     } catch (err) {
       if (isFirstAccessRequired(err)) {
-        setFirstAccess(true);
+        setStep('firstAccess');
         return;
       }
       if (err instanceof ApiError) {
@@ -65,14 +72,16 @@ export default function Login() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {firstAccess ? (
+          {step === 'firstAccess' ? (
             <FirstAccessForm
               email={email}
               currentPassword={password}
               onDone={setSignedIn}
               onRestart={restartLogin}
-              onBack={() => setFirstAccess(false)}
+              onBack={() => setStep('login')}
             />
+          ) : step === 'signUp' ? (
+            <SignUpForm onDone={setSignedIn} onBack={() => setStep('login')} />
           ) : (
             <>
               <View style={styles.nav}>
@@ -110,6 +119,11 @@ export default function Login() {
               />
               <PrimaryButton label="Entrar" onPress={submit} loading={loading} />
               <Text style={styles.hint}>A mesma conta do site do Tech Challenge 3.</Text>
+              <Pressable onPress={openSignUp} accessibilityRole="link" hitSlop={8} style={styles.signUp}>
+                <Text style={styles.signUpText}>
+                  Não tem conta? <Text style={styles.accent}>Cadastre-se</Text>
+                </Text>
+              </Pressable>
             </>
           )}
         </ScrollView>
@@ -128,4 +142,6 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: fonts.body400, fontSize: 13, color: colors.textMuted, marginBottom: 26 },
   error: { fontFamily: fonts.body500, fontSize: 13, color: colors.danger, marginBottom: 14 },
   hint: { fontFamily: fonts.body400, fontSize: 12, color: colors.textFaint, textAlign: 'center', marginTop: 14 },
+  signUp: { alignSelf: 'center', marginTop: 22 },
+  signUpText: { fontFamily: fonts.body500, fontSize: 13, color: colors.textMuted },
 });
