@@ -13,6 +13,7 @@ type AuthValue = {
   signIn(email: string, password: string): Promise<SessionUser>;
   completeFirstAccess(input: FirstAccessInput): Promise<SessionUser>;
   signUp(input: SignUpInput): Promise<SessionUser>;
+  updateUser(user: SessionUser): Promise<void>;
   signOut(): Promise<void>;
 };
 
@@ -60,6 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [saveSession],
   );
 
+  // Dados do perfil mudaram (nome): o token continua o mesmo.
+  const updateUser = useCallback(
+    async (user: SessionUser) => {
+      if (!session) return;
+      const next: Session = { ...session, user };
+      setSession(next);
+      await saveRaw(JSON.stringify(next)).catch(() => {});
+    },
+    [session],
+  );
+
   const signOut = useCallback(async () => {
     setSession(null);
     await clearRaw().catch(() => {});
@@ -74,9 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       completeFirstAccess,
       signUp,
+      updateUser,
       signOut,
     }),
-    [ready, session, signIn, completeFirstAccess, signUp, signOut],
+    [ready, session, signIn, completeFirstAccess, signUp, updateUser, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

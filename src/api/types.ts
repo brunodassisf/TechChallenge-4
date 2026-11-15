@@ -44,6 +44,17 @@ export type SignUpInput = {
   confirmPassword: string;
 };
 
+export type StudentProfile = { name: string; email: string };
+
+/** Senhas vazias = não trocar a senha / não enviar. */
+export type StudentProfileInput = {
+  name: string;
+  email: string;
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+};
+
 export type AuthorSummary = {
   id: string;
   name: string;
