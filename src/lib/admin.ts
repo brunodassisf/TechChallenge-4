@@ -6,6 +6,10 @@ export function isAdmin(user: SessionUser | null): boolean {
   return user?.role === 'ADMIN';
 }
 
+export function isStudent(user: SessionUser | null): boolean {
+  return user?.role === 'STUDENT';
+}
+
 /** Para onde vai quem acabou de entrar. */
 export function homeRouteFor(user: SessionUser | null): '/admin' | '/' {
   return isAdmin(user) ? '/admin' : '/';

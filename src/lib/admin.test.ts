@@ -7,6 +7,7 @@ import {
   blockedCount,
   homeRouteFor,
   isAdmin,
+  isStudent,
   postCountLabel,
   sortAuthors,
   teacherCountLabel,
@@ -22,6 +23,12 @@ describe('papel', () => {
     expect(isAdmin(prof)).toBe(false);
     expect(isAdmin(aluno)).toBe(false);
     expect(isAdmin(null)).toBe(false);
+  });
+  it('isStudent', () => {
+    expect(isStudent(aluno)).toBe(true);
+    expect(isStudent(prof)).toBe(false);
+    expect(isStudent(admin)).toBe(false);
+    expect(isStudent(null)).toBe(false);
   });
   it('homeRouteFor', () => {
     expect(homeRouteFor(admin)).toBe('/admin');
