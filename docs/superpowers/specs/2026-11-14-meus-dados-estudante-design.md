@@ -32,8 +32,7 @@ As duas rotas usam o token da sessão (`Authorization: Bearer`). Sem sessão, a 
 Respostas:
 
 - 200 `{ user: { id, name, role, authorId } }`, no mesmo formato de `user` do login.
-- 400 `{ errors }` por campo. Sem a senha atual, a mensagem é "Informe a senha atual." em `currentPassword`.
-- 401 `{ error: "Senha atual incorreta." }`.
+- 400 `{ errors }` por campo. Sem a senha atual: "Informe a senha atual." em `currentPassword`. Senha atual errada: "Senha atual incorreta." em `currentPassword`. Não é 401, porque o app trata 401 como sessão vencida e tira a pessoa da conta.
 - 409 `{ error: "Já existe uma conta com esse e-mail." }`.
 
 O token guarda só `userId` e `role`, então nenhuma alteração exige login de novo.
@@ -71,10 +70,12 @@ A comparação do e-mail ignora os espaços das pontas. O formato do e-mail fica
 |---|---|
 | 400 em `name`, `email`, `currentPassword`, `password` ou `confirmPassword` | Mensagem embaixo do campo |
 | 400 em outro campo | Primeira mensagem da API no topo (`stepFormError`) |
-| 401 senha atual incorreta | Mensagem no topo; o campo "Senha atual" é limpo |
+| 400 senha atual incorreta | Mensagem embaixo de "Senha atual"; o campo é limpo |
 | 409 e-mail já usado | Mensagem no topo |
 | Sem conexão ou 5xx | Mensagem no topo; os campos ficam preenchidos |
-| Sessão vencida (401 no GET) | Mensagem da API com "Tentar de novo" |
+| 401 (sessão vencida) | Sai da conta e abre o login, como nas outras telas |
+
+Depois de salvar, a tela volta para a lista com o aviso "Dados atualizados".
 
 ## Peças
 
@@ -87,7 +88,7 @@ A comparação do e-mail ignora os espaços das pontas. O formato do e-mail fica
   - `profileFormError(err)`.
 - `src/app/perfil.tsx`: a tela, registrada como modal em `_layout.tsx`.
 - `src/app/index.tsx`: a opção "Meus dados" no menu do avatar, só para STUDENT.
-- `src/lib/admin.ts` ou uma regra equivalente: `isStudent(user)`.
+- `src/lib/admin.ts`: `isStudent(user)`. Em `_layout.tsx`, a rota fica num `Stack.Protected` com `guard={isStudent(user)}`.
 - `README.md`: a tela e a dependência da API.
 
 ## Testes
