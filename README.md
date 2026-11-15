@@ -47,6 +47,7 @@ npx tsc --noEmit    # checagem de tipos
 | `/post/novo` | Criar post (professor) |
 | `/post/[id]/editar` | Editar post |
 | `/login` | Login com a mesma conta do site do Tech Challenge 3; cadastro de estudante ("Cadastre-se") |
+| `/perfil` | Meus dados: nome, e-mail e troca de senha (só estudante) |
 | `/admin` | Painel de professores (só ADMIN) |
 | `/admin/novo` | Cadastrar professor (só ADMIN) |
 | `/admin/[id]/renomear` | Renomear professor (só ADMIN) |
@@ -56,6 +57,8 @@ npx tsc --noEmit    # checagem de tipos
 Na tela Entrar, "Não tem conta? Cadastre-se" abre a etapa **Criar conta** (nome, e-mail, senha e repetir senha). O estudante escolhe a própria senha, sem senha padrão e sem primeiro acesso, e já sai logado. Estudante só lê posts. Não há confirmação de e-mail.
 
 Depende de `POST /api/student` na API do Tech Challenge 3.
+
+Logado, o estudante abre **Meus dados** pelo menu do avatar para editar nome e e-mail e trocar a senha. Trocar o e-mail ou a senha pede a senha atual. Depende de `GET` e `PUT /api/student/me`.
 
 ## Área de administração
 
