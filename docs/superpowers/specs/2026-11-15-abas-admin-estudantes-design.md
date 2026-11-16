@@ -39,7 +39,7 @@ O `POST /api/student` (cadastro público) continua igual. O TC-3 não tem testes
   - estado `tab: 'professores' | 'estudantes'`;
   - seletor de duas opções no cabeçalho, com `accessibilityRole="tab"` e `accessibilityState={{ selected }}`;
   - título e subtítulo mudam por aba (subtítulo dos estudantes: "N estudante(s)");
-  - a lista de estudantes carrega na primeira vez que a aba é aberta e de novo no foco da tela enquanto ela estiver ativa;
+  - a aba ativa recarrega ao ser aberta e no foco da tela (a de estudantes só busca quando está ativa);
   - estados da aba Estudantes: esqueleto ao carregar, "Nenhum estudante cadastrado" quando vazio, "Sem conexão com o servidor" com "Tentar de novo" em caso de erro.
 
 ## Testes
