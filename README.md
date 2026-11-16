@@ -51,6 +51,7 @@ npx tsc --noEmit    # checagem de tipos
 | `/admin` | Painel com abas Professores e Estudantes (só ADMIN) |
 | `/admin/novo` | Cadastrar professor (só ADMIN) |
 | `/admin/[id]/renomear` | Renomear professor (só ADMIN) |
+| `/admin/estudante/[id]/editar` | Editar nome e e-mail do estudante (só ADMIN) |
 
 ## Cadastro de estudante
 
@@ -67,7 +68,7 @@ Quem entra com uma conta **ADMIN** vai direto para o **Painel** (`/admin`), onde
 - Professor pode ser **desativado**: não entra mais no app nem no site, e os posts dele continuam publicados. Dá para **reativar** depois. No Painel, inativos aparecem apagados, no fim da lista.
 - **Remover** só aparece para quem não tem posts.
 - Remover um professor apaga também a conta de login dele.
-- A aba **Estudantes** lista nome e e-mail de quem se cadastrou (só leitura; a API usa `GET /api/student`, restrita ao ADMIN).
+- A aba **Estudantes** lista nome e e-mail de quem se cadastrou. Tocando num estudante, o admin edita nome e e-mail (a senha não muda), **reseta a senha** (no próximo login o estudante usa a senha padrão e cria outra no primeiro acesso) ou exclui a conta. Rotas: `GET /api/student`, `PUT` e `DELETE /api/student/[id]`, `POST /api/student/[id]/reset-password`, todas restritas ao ADMIN.
 - Professor novo entra com a senha padrão da escola (`DEFAULT_TEACHER_PASSWORD` na API) e cria a própria senha no primeiro acesso, pelo app.
 
 Depende dos ajustes da API do Tech Challenge 3: `postCount` em `GET /api/author`, 409 em `DELETE /api/author/:id` quando há posts, 401 (sem sessão) / 403 (sem permissão) nas rotas de escrita, `PATCH /api/author/:id/status` para desativar e reativar, `POST /api/author` só com nome e e-mail, `FIRST_ACCESS_REQUIRED` no login e `POST /api/auth/first-access`.
