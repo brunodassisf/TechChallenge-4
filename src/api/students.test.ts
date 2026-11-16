@@ -1,4 +1,4 @@
-import { getMyProfile, listStudents, updateMyProfile } from './students';
+import { deleteStudent, getMyProfile, listStudents, resetStudentPassword, updateMyProfile, updateStudent } from './students';
 
 const fetchMock = jest.fn();
 
@@ -63,5 +63,38 @@ describe('listStudents', () => {
   it('falha quando a resposta não é lista', async () => {
     respond(200, { nope: true });
     await expect(listStudents('tk')).rejects.toThrow();
+  });
+});
+
+const summary = { id: 's1', name: 'Ana Souza', email: 'ana@x.com', createdAt: '2026-11-01T00:00:00.000Z' };
+
+describe('updateStudent', () => {
+  it('PUT /api/student/:id com nome e e-mail sem espaços nas pontas', async () => {
+    respond(200, { data: summary });
+    await expect(updateStudent('s1', { name: ' Ana Souza ', email: ' ana@x.com ' }, 'tk')).resolves.toEqual(summary);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test:3000/api/student/s1');
+    expect(init).toMatchObject({ method: 'PUT', headers: { Authorization: 'Bearer tk' } });
+    expect(JSON.parse(init.body)).toEqual({ name: 'Ana Souza', email: 'ana@x.com' });
+  });
+});
+
+describe('deleteStudent', () => {
+  it('DELETE /api/student/:id', async () => {
+    respond(200, { message: 'ok' });
+    await deleteStudent('s1', 'tk');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test:3000/api/student/s1');
+    expect(init).toMatchObject({ method: 'DELETE', headers: { Authorization: 'Bearer tk' } });
+  });
+});
+
+describe('resetStudentPassword', () => {
+  it('POST /api/student/:id/reset-password', async () => {
+    respond(200, { message: 'ok' });
+    await resetStudentPassword('s1', 'tk');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://api.test:3000/api/student/s1/reset-password');
+    expect(init).toMatchObject({ method: 'POST', headers: { Authorization: 'Bearer tk' } });
   });
 });
