@@ -13,10 +13,12 @@ import { DeactivateAuthorSheet } from '@/components/DeactivateAuthorSheet';
 import { RemoveAuthorSheet } from '@/components/RemoveAuthorSheet';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { StateMessage } from '@/components/StateMessage';
+import { StudentRow } from '@/components/StudentRow';
 import { Toast } from '@/components/Toast';
 import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { useAuthors } from '@/hooks/useAuthors';
-import { blockedCount, sortAuthors, teacherCountLabel } from '@/lib/admin';
+import { useStudents } from '@/hooks/useStudents';
+import { blockedCount, sortAuthors, studentCountLabel, teacherCountLabel } from '@/lib/admin';
 import { initials } from '@/lib/initials';
 import { colors, fonts, radius, space } from '@/theme';
 
@@ -35,8 +37,17 @@ export default function AdminPanel() {
   const [busy, setBusy] = useState(false);
   const sorted = sortAuthors(authors);
   const inactiveCount = authors.filter((a) => !a.active).length;
+  const [tab, setTab] = useState<'professores' | 'estudantes'>('professores');
+  const studentsState = useStudents();
+  const onStudents = tab === 'estudantes';
+  const active = onStudents ? studentsState : { status, error, refreshing, reload };
+  const activeCount = onStudents ? studentsState.students.length : authors.length;
+  const reloadStudents = studentsState.reload;
 
-  useFocusEffect(useCallback(() => reload(), [reload]));
+  // Foco da tela e troca de aba recarregam só a aba ativa.
+  useFocusEffect(
+    useCallback(() => (onStudents ? reloadStudents() : reload()), [onStudents, reloadStudents, reload]),
+  );
 
   const hideToast = useCallback(() => {
     router.setParams({ aviso: undefined });
@@ -149,17 +160,34 @@ export default function AdminPanel() {
       <View style={styles.badge}>
         <Text style={styles.badgeText}>Administração</Text>
       </View>
+      <View style={styles.tabs} accessibilityRole="tablist">
+        {(['professores', 'estudantes'] as const).map((t) => (
+          <Pressable
+            key={t}
+            onPress={() => setTab(t)}
+            style={[styles.tab, tab === t && styles.tabOn]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === t }}
+          >
+            <Text style={[styles.tabText, tab === t && styles.tabTextOn]}>
+              {t === 'professores' ? 'Professores' : 'Estudantes'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       <Text style={styles.title} accessibilityRole="header">
-        Professores
+        {onStudents ? 'Estudantes' : 'Professores'}
       </Text>
-      {status === 'success' && authors.length > 0 && (
-        <Text style={styles.sub}>{teacherCountLabel(authors.length, inactiveCount)}</Text>
+      {active.status === 'success' && activeCount > 0 && (
+        <Text style={styles.sub}>
+          {onStudents ? studentCountLabel(activeCount) : teacherCountLabel(activeCount, inactiveCount)}
+        </Text>
       )}
     </View>
   );
 
   let empty: ReactElement;
-  if (status === 'loading') {
+  if (active.status === 'loading') {
     empty = (
       <View>
         <SkeletonCard />
@@ -167,14 +195,22 @@ export default function AdminPanel() {
         <SkeletonCard />
       </View>
     );
-  } else if (status === 'error') {
+  } else if (active.status === 'error') {
     empty = (
       <StateMessage
         emoji="📡"
         title="Sem conexão com o servidor"
-        message={error ?? 'Não conseguimos carregar os professores.'}
+        message={active.error ?? `Não conseguimos carregar os ${onStudents ? 'estudantes' : 'professores'}.`}
         actionLabel="Tentar de novo"
-        onAction={() => reload()}
+        onAction={() => active.reload()}
+      />
+    );
+  } else if (onStudents) {
+    empty = (
+      <StateMessage
+        emoji="🎒"
+        title="Nenhum estudante cadastrado"
+        message="Os estudantes aparecem aqui depois do cadastro."
       />
     );
   } else {
@@ -183,29 +219,47 @@ export default function AdminPanel() {
     );
   }
 
-  const showList = status === 'success' || (status === 'loading' && authors.length > 0);
+  const showList = active.status === 'success' || (active.status === 'loading' && activeCount > 0);
+  const listProps = {
+    ListHeaderComponent: header,
+    ListEmptyComponent: empty,
+    contentContainerStyle: [styles.content, { paddingBottom: 100 + insets.bottom }],
+    refreshControl: (
+      <RefreshControl
+        refreshing={active.refreshing}
+        onRefresh={() => active.reload({ pull: true })}
+        tintColor={colors.text}
+      />
+    ),
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <FlatList
-        data={showList ? sorted : []}
-        keyExtractor={(a) => a.id}
-        renderItem={({ item, index }) => <AuthorRow author={item} index={index} onPress={() => setSelected(item)} />}
-        ListHeaderComponent={header}
-        ListEmptyComponent={empty}
-        contentContainerStyle={[styles.content, { paddingBottom: 100 + insets.bottom }]}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => reload({ pull: true })} tintColor={colors.text} />
-        }
-      />
-      <Pressable
-        style={[styles.fab, { bottom: 24 + insets.bottom }]}
-        onPress={() => router.push('/admin/novo')}
-        accessibilityRole="button"
-        accessibilityLabel="Cadastrar professor"
-      >
-        <Text style={styles.fabText}>＋ Professor</Text>
-      </Pressable>
+      {onStudents ? (
+        <FlatList
+          {...listProps}
+          data={showList ? studentsState.students : []}
+          keyExtractor={(s) => s.id}
+          renderItem={({ item, index }) => <StudentRow student={item} index={index} />}
+        />
+      ) : (
+        <FlatList
+          {...listProps}
+          data={showList ? sorted : []}
+          keyExtractor={(a) => a.id}
+          renderItem={({ item, index }) => <AuthorRow author={item} index={index} onPress={() => setSelected(item)} />}
+        />
+      )}
+      {!onStudents && (
+        <Pressable
+          style={[styles.fab, { bottom: 24 + insets.bottom }]}
+          onPress={() => router.push('/admin/novo')}
+          accessibilityRole="button"
+          accessibilityLabel="Cadastrar professor"
+        >
+          <Text style={styles.fabText}>＋ Professor</Text>
+        </Pressable>
+      )}
       <AuthorActionsSheet
         author={selected}
         onRename={openRename}
@@ -257,6 +311,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   badgeText: { fontFamily: fonts.display700, fontSize: 11, color: colors.onCard },
+  tabs: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.subtle,
+    borderRadius: radius.pill,
+    padding: 4,
+    marginBottom: space.md,
+  },
+  tab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill },
+  tabOn: { backgroundColor: colors.admin },
+  tabText: { fontFamily: fonts.display700, fontSize: 13, color: colors.textFaint },
+  tabTextOn: { color: colors.onCard },
   title: { fontFamily: fonts.display800, fontSize: 30, lineHeight: 32, color: colors.text, marginBottom: 4 },
   sub: { fontFamily: fonts.body400, fontSize: 12, color: colors.textFaint, marginBottom: 14 },
   fab: {
