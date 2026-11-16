@@ -30,6 +30,7 @@
 ### Task 1: rotas do TC-3
 
 **Files:**
+- Create: `../techchallenge-3/src/lib/admin-student.ts` (helper `adminStudent`: route.ts do Next só pode exportar handlers)
 - Create: `../techchallenge-3/src/app/api/student/[id]/route.ts`
 - Create: `../techchallenge-3/src/app/api/student/[id]/reset-password/route.ts`
 
@@ -49,6 +50,7 @@ const EMAIL_TAKEN = { error: "Já existe uma conta com esse e-mail." };
 const notFound = () => NextResponse.json({ error: "Estudante não encontrado." }, { status: 404 });
 
 /** Estudante do `id` se a sessão for de ADMIN; senão, a resposta de erro. */
+// Em src/lib/admin-student.ts (com os imports de db, getSession, isObjectId, Role, NextResponse); route.ts importa de "@/lib/admin-student".
 export async function adminStudent(id: string) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Você precisa estar logado." }, { status: 401 });
@@ -110,7 +112,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 import { db } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
-import { adminStudent } from "../route";
+import { adminStudent } from "@/lib/admin-student";
 
 /** Volta a conta para a senha padrão; o estudante cria outra no primeiro acesso. */
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -133,7 +135,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 ```
 
 - [ ] **Step 3: verificar:** `npx tsc --noEmit` no TC-3 deve passar. Depois de `docker compose up -d --build app`, os comandos `curl -i -X PUT .../api/student/x`, `curl -i -X DELETE .../api/student/x` e `curl -i -X POST .../api/student/x/reset-password` sem token devem dar 401.
-- [ ] **Step 4: commit:** `git add "src/app/api/student/[id]" && git commit -m "feat: editar, excluir e resetar senha de estudante (admin)"`
+- [ ] **Step 4: commit:** `git add "src/app/api/student/[id]" src/lib/admin-student.ts && git commit -m "feat: editar, excluir e resetar senha de estudante (admin)"`
 
 ### Task 2: funções da API no app
 
