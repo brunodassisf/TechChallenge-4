@@ -10,6 +10,7 @@ import {
   isStudent,
   postCountLabel,
   sortAuthors,
+  studentCountLabel,
   teacherCountLabel,
 } from './admin';
 
@@ -119,5 +120,12 @@ describe('authorActions', () => {
   });
   it('inativo sem posts', () => {
     expect(authorActions({ active: false, postCount: 0 })).toEqual(['rename', 'reactivate', 'remove']);
+  });
+});
+
+describe('studentCountLabel', () => {
+  it('singular e plural', () => {
+    expect(studentCountLabel(1)).toBe('1 estudante cadastrado');
+    expect(studentCountLabel(3)).toBe('3 estudantes cadastrados');
   });
 });

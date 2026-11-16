@@ -26,6 +26,10 @@ export function teacherCountLabel(total: number, inactive = 0): string {
   return `${base} · ${inactive === 1 ? '1 inativo' : `${inactive} inativos`}`;
 }
 
+export function studentCountLabel(n: number): string {
+  return n === 1 ? '1 estudante cadastrado' : `${n} estudantes cadastrados`;
+}
+
 export function authorSubtitle(a: Pick<AuthorSummary, 'postCount' | 'createdAt'>): string {
   const since = formatMonthYear(a.createdAt);
   const count = postCountLabel(a.postCount);

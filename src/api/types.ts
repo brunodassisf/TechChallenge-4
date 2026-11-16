@@ -67,3 +67,5 @@ export type AuthorSummary = {
 };
 
 export type AuthorInput = { name: string; email: string };
+
+export type StudentSummary = { id: string; name: string; email: string; createdAt: string };

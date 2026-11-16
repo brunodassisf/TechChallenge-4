@@ -1,5 +1,5 @@
-import { apiRequest } from './client';
-import type { SessionUser, StudentProfile, StudentProfileInput } from './types';
+import { ApiError, apiRequest, INVALID_RESPONSE } from './client';
+import type { SessionUser, StudentProfile, StudentProfileInput, StudentSummary } from './types';
 
 const ME = '/api/student/me';
 
@@ -14,4 +14,10 @@ export async function updateMyProfile(input: StudentProfileInput, token: string)
   }
   const res = await apiRequest<{ user: SessionUser }>(ME, { method: 'PUT', body, token });
   return res.user;
+}
+
+export async function listStudents(token: string): Promise<StudentSummary[]> {
+  const data = await apiRequest<unknown>('/api/student', { token });
+  if (!Array.isArray(data)) throw new ApiError(200, INVALID_RESPONSE);
+  return data as StudentSummary[];
 }
