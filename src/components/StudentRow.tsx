@@ -1,13 +1,20 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { StudentSummary } from '@/api/types';
 import { avatarColor } from '@/lib/admin';
 import { initials } from '@/lib/initials';
 import { colors, fonts, space } from '@/theme';
 
-export function StudentRow({ student, index }: { student: StudentSummary; index: number }) {
+type Props = { student: StudentSummary; index: number; onPress: () => void };
+
+export function StudentRow({ student, index, onPress }: Props) {
   return (
-    <View style={styles.row} accessible accessibilityLabel={`${student.name}, ${student.email}`}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
+      accessibilityRole="button"
+      accessibilityLabel={`${student.name}, ${student.email}. Abrir ações`}
+    >
       <View style={[styles.avatar, { backgroundColor: avatarColor(index) }]}>
         <Text style={styles.avatarText}>{initials(student.name)}</Text>
       </View>
@@ -19,7 +26,8 @@ export function StudentRow({ student, index }: { student: StudentSummary; index:
           {student.email}
         </Text>
       </View>
-    </View>
+      <Text style={styles.more}>⋯</Text>
+    </Pressable>
   );
 }
 
@@ -41,4 +49,5 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   name: { fontFamily: fonts.display700, fontSize: 16, color: colors.text },
   sub: { fontFamily: fonts.body400, fontSize: 12, color: colors.textFaint, marginTop: 2 },
+  more: { fontSize: 18, color: colors.textFaint },
 });

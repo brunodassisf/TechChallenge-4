@@ -5,14 +5,17 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AuthorHasPostsError, deleteAuthor, setAuthorActive } from '@/api/authors';
 import { ApiError } from '@/api/client';
-import type { AuthorSummary } from '@/api/types';
+import { deleteStudent, resetStudentPassword } from '@/api/students';
+import type { AuthorSummary, StudentSummary } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { AuthorActionsSheet } from '@/components/AuthorActionsSheet';
 import { AuthorRow } from '@/components/AuthorRow';
+import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { DeactivateAuthorSheet } from '@/components/DeactivateAuthorSheet';
 import { RemoveAuthorSheet } from '@/components/RemoveAuthorSheet';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { StateMessage } from '@/components/StateMessage';
+import { StudentActionsSheet } from '@/components/StudentActionsSheet';
 import { StudentRow } from '@/components/StudentRow';
 import { Toast } from '@/components/Toast';
 import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
@@ -43,6 +46,10 @@ export default function AdminPanel() {
   const active = onStudents ? studentsState : { status, error, refreshing, reload };
   const activeCount = onStudents ? studentsState.students.length : authors.length;
   const reloadStudents = studentsState.reload;
+  const [student, setStudent] = useState<StudentSummary | null>(null);
+  const [confirming, setConfirming] = useState<{ student: StudentSummary; action: 'reset' | 'delete' } | null>(
+    null,
+  );
 
   // Foco da tela e troca de aba recarregam só a aba ativa.
   useFocusEffect(
@@ -113,6 +120,48 @@ export default function AdminPanel() {
     } catch (err) {
       close();
       showError(err, active ? 'Não foi possível reativar' : 'Não foi possível desativar');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openEditStudent() {
+    if (!student) return;
+    const { id, name, email } = student;
+    setStudent(null);
+    router.push({ pathname: '/admin/estudante/[id]/editar', params: { id, name, email } });
+  }
+
+  function askStudent(action: 'reset' | 'delete') {
+    if (!student) return;
+    setConfirming({ student, action });
+    setStudent(null);
+  }
+
+  async function confirmStudent() {
+    if (!confirming) return;
+    const token = requireToken();
+    if (!token) {
+      setConfirming(null);
+      return;
+    }
+    const { student: target, action } = confirming;
+    setBusy(true);
+    try {
+      if (action === 'reset') await resetStudentPassword(target.id, token);
+      else await deleteStudent(target.id, token);
+      setConfirming(null);
+      router.setParams({ aviso: action === 'reset' ? 'Senha resetada' : 'Estudante excluído' });
+      if (action === 'delete') reloadStudents();
+    } catch (err) {
+      setConfirming(null);
+      if (handleApiError(err)) return;
+      if (err instanceof ApiError && err.status === 404) {
+        Alert.alert('Estudante não encontrado', 'Ele pode ter sido excluído.');
+        reloadStudents();
+        return;
+      }
+      Alert.alert('Não foi possível concluir', err instanceof ApiError ? err.message : 'Tente de novo.');
     } finally {
       setBusy(false);
     }
@@ -240,7 +289,9 @@ export default function AdminPanel() {
           {...listProps}
           data={showList ? studentsState.students : []}
           keyExtractor={(s) => s.id}
-          renderItem={({ item, index }) => <StudentRow student={item} index={index} />}
+          renderItem={({ item, index }) => (
+            <StudentRow student={item} index={index} onPress={() => setStudent(item)} />
+          )}
         />
       ) : (
         <FlatList
@@ -281,6 +332,30 @@ export default function AdminPanel() {
         onConfirm={confirmRemove}
         onDeactivate={() => removing && changeActive(removing.author, false, () => setRemoving(null))}
         onClose={() => setRemoving(null)}
+      />
+      <StudentActionsSheet
+        student={student}
+        onEdit={openEditStudent}
+        onReset={() => askStudent('reset')}
+        onDelete={() => askStudent('delete')}
+        onClose={() => setStudent(null)}
+      />
+      <ConfirmSheet
+        visible={!!confirming}
+        title={
+          confirming?.action === 'reset'
+            ? `Resetar a senha de ${confirming.student.name}?`
+            : `Excluir ${confirming?.student.name ?? ''}?`
+        }
+        message={
+          confirming?.action === 'reset'
+            ? 'Na próxima entrada, o estudante usa a senha padrão e cria uma nova.'
+            : 'A conta de login também é apagada.'
+        }
+        confirmLabel={confirming?.action === 'reset' ? 'Resetar senha' : 'Excluir'}
+        onConfirm={confirmStudent}
+        onCancel={() => setConfirming(null)}
+        loading={busy}
       />
       <Toast message={aviso ?? null} onHide={hideToast} />
     </SafeAreaView>

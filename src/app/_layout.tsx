@@ -60,6 +60,7 @@ function RootStack() {
           <Stack.Screen name="admin/index" />
           <Stack.Screen name="admin/novo" options={{ presentation: 'modal' }} />
           <Stack.Screen name="admin/[id]/renomear" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="admin/estudante/[id]/editar" options={{ presentation: 'modal' }} />
         </Stack.Protected>
       </Stack>
     </>
