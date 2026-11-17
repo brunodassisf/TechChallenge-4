@@ -65,7 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateUser = useCallback(
     async (user: SessionUser) => {
       if (!session) return;
-      const next: Session = { ...session, user };
+      // PUT /api/student/me não devolve studentId: mescla para não perdê-lo.
+      const next: Session = { ...session, user: { ...session.user, ...user } };
       setSession(next);
       await saveRaw(JSON.stringify(next)).catch(() => {});
     },

@@ -20,6 +20,8 @@ export type SessionUser = {
   name: string;
   role: Role;
   authorId: string | null;
+  /** Perfil de estudante. Ausente em sessões salvas antes dos comentários. */
+  studentId?: string | null;
 };
 
 export type LoginResponse = {
@@ -71,3 +73,13 @@ export type AuthorInput = { name: string; email: string };
 export type StudentSummary = { id: string; name: string; email: string; createdAt: string };
 
 export type StudentInput = { name: string; email: string };
+
+export type Comment = {
+  id: string;
+  text: string;
+  postId: string;
+  studentId: string;
+  createdAt: string;
+  updatedAt: string;
+  student: { id: string; name: string };
+};
