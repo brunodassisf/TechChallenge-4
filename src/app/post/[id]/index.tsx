@@ -1,12 +1,13 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { deletePost } from '@/api/posts';
 import { useAuth } from '@/auth/AuthContext';
 import { CategoryTag } from '@/components/CategoryTag';
+import { CommentsSection } from '@/components/CommentsSection';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { IconButton } from '@/components/IconButton';
 import { StateMessage } from '@/components/StateMessage';
@@ -85,38 +86,41 @@ export default function PostScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.nav}>
-          <IconButton label="←" onPress={back} accessibilityLabel="Voltar" />
-          {canManage && (
-            <View style={styles.actions}>
-              <IconButton
-                label="✎ Editar"
-                accessibilityLabel="Editar post"
-                onPress={() => router.push({ pathname: '/post/[id]/editar', params: { id: post.id } })}
-              />
-              <IconButton
-                label="🗑"
-                tone="danger"
-                accessibilityLabel="Excluir post"
-                onPress={() => setConfirming(true)}
-              />
-            </View>
-          )}
-        </View>
-        <View style={[styles.hero, { backgroundColor: cat.color }]}>
-          <CategoryTag category={post.category} />
-          <Text style={styles.title} accessibilityRole="header">
-            {post.title}
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.nav}>
+            <IconButton label="←" onPress={back} accessibilityLabel="Voltar" />
+            {canManage && (
+              <View style={styles.actions}>
+                <IconButton
+                  label="✎ Editar"
+                  accessibilityLabel="Editar post"
+                  onPress={() => router.push({ pathname: '/post/[id]/editar', params: { id: post.id } })}
+                />
+                <IconButton
+                  label="🗑"
+                  tone="danger"
+                  accessibilityLabel="Excluir post"
+                  onPress={() => setConfirming(true)}
+                />
+              </View>
+            )}
+          </View>
+          <View style={[styles.hero, { backgroundColor: cat.color }]}>
+            <CategoryTag category={post.category} />
+            <Text style={styles.title} accessibilityRole="header">
+              {post.title}
+            </Text>
+            <Text style={styles.by}>
+              {authorName(post)} · {formatDate(post.createdAt)}
+            </Text>
+          </View>
+          <Text style={styles.body} selectable>
+            {post.text}
           </Text>
-          <Text style={styles.by}>
-            {authorName(post)} · {formatDate(post.createdAt)}
-          </Text>
-        </View>
-        <Text style={styles.body} selectable>
-          {post.text}
-        </Text>
-      </ScrollView>
+          <CommentsSection post={post} />
+        </ScrollView>
+      </KeyboardAvoidingView>
       <ConfirmSheet
         visible={confirming}
         title="Excluir este post?"
@@ -132,6 +136,7 @@ export default function PostScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
   padded: { paddingHorizontal: space.lg },
   content: { padding: space.lg, paddingBottom: 40 },
