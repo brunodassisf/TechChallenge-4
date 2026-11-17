@@ -14,3 +14,6 @@ npm test · npx tsc --noEmit · npx expo lint · npx expo export --platform andr
 # Armadilhas
 - Chamada Bash reescrita pelo hook rtk falha se for junto com outras: mandar sozinha.
 - O IP do PC muda (.3/.4): conferir `.env` (EXPO_PUBLIC_API_URL) quando o celular não conectar.
+- Docker do TC-3 roda imagem buildada: depois de mudar rota, `docker compose up -d --build app` em ../techchallenge-3 (senão 405/antigo).
+- `route.ts` do Next só exporta handlers (GET/POST...): helper compartilhado vai em `src/lib/` do TC-3.
+- `requisitos_funcionais_do_app.md` é ignorado pelo git: editar só local, não tentar commitar.
