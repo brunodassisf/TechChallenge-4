@@ -5,13 +5,16 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AuthorHasPostsError, deleteAuthor, setAuthorActive } from '@/api/authors';
 import { ApiError } from '@/api/client';
+import { deletePost } from '@/api/posts';
 import { deleteStudent, resetStudentPassword } from '@/api/students';
-import type { AuthorSummary, StudentSummary } from '@/api/types';
+import type { AuthorSummary, Post, StudentSummary } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { AuthorActionsSheet } from '@/components/AuthorActionsSheet';
 import { AuthorRow } from '@/components/AuthorRow';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { DeactivateAuthorSheet } from '@/components/DeactivateAuthorSheet';
+import { PostActionsSheet } from '@/components/PostActionsSheet';
+import { PostCard } from '@/components/PostCard';
 import { RemoveAuthorSheet } from '@/components/RemoveAuthorSheet';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { StateMessage } from '@/components/StateMessage';
@@ -20,12 +23,17 @@ import { StudentRow } from '@/components/StudentRow';
 import { Toast } from '@/components/Toast';
 import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { useAuthors } from '@/hooks/useAuthors';
+import { usePosts } from '@/hooks/usePosts';
 import { useStudents } from '@/hooks/useStudents';
-import { blockedCount, sortAuthors, studentCountLabel, teacherCountLabel } from '@/lib/admin';
+import { blockedCount, postCountLabel, sortAuthors, studentCountLabel, teacherCountLabel } from '@/lib/admin';
 import { initials } from '@/lib/initials';
 import { colors, fonts, radius, space } from '@/theme';
 
 type Removing = { author: AuthorSummary; postCount: number };
+type Tab = 'professores' | 'estudantes' | 'posts';
+
+const TAB_LABELS: Record<Tab, string> = { professores: 'Professores', estudantes: 'Estudantes', posts: 'Posts' };
+const TAB_NOUNS: Record<Tab, string> = { professores: 'professores', estudantes: 'estudantes', posts: 'posts' };
 
 export default function AdminPanel() {
   const { user, signOut } = useAuth();
@@ -40,12 +48,17 @@ export default function AdminPanel() {
   const [busy, setBusy] = useState(false);
   const sorted = sortAuthors(authors);
   const inactiveCount = authors.filter((a) => !a.active).length;
-  const [tab, setTab] = useState<'professores' | 'estudantes'>('professores');
+  const [tab, setTab] = useState<Tab>('professores');
   const studentsState = useStudents();
+  const postsState = usePosts('');
   const onStudents = tab === 'estudantes';
-  const active = onStudents ? studentsState : { status, error, refreshing, reload };
-  const activeCount = onStudents ? studentsState.students.length : authors.length;
+  const onPosts = tab === 'posts';
+  const active = onStudents ? studentsState : onPosts ? postsState : { status, error, refreshing, reload };
+  const activeCount = onStudents ? studentsState.students.length : onPosts ? postsState.posts.length : authors.length;
   const reloadStudents = studentsState.reload;
+  const reloadPosts = postsState.reload;
+  const [post, setPost] = useState<Post | null>(null);
+  const [deletingPost, setDeletingPost] = useState<Post | null>(null);
   const [student, setStudent] = useState<StudentSummary | null>(null);
   const [confirming, setConfirming] = useState<{ student: StudentSummary; action: 'reset' | 'delete' } | null>(
     null,
@@ -53,7 +66,11 @@ export default function AdminPanel() {
 
   // Foco da tela e troca de aba recarregam só a aba ativa.
   useFocusEffect(
-    useCallback(() => (onStudents ? reloadStudents() : reload()), [onStudents, reloadStudents, reload]),
+    useCallback(() => {
+      if (onStudents) reloadStudents();
+      else if (onPosts) reloadPosts();
+      else reload();
+    }, [onStudents, onPosts, reloadStudents, reloadPosts, reload]),
   );
 
   const hideToast = useCallback(() => {
@@ -167,6 +184,40 @@ export default function AdminPanel() {
     }
   }
 
+  function openEditPost() {
+    if (!post) return;
+    const { id } = post;
+    setPost(null);
+    router.push({ pathname: '/post/[id]/editar', params: { id } });
+  }
+
+  async function confirmDeletePost() {
+    if (!deletingPost) return;
+    const token = requireToken();
+    if (!token) {
+      setDeletingPost(null);
+      return;
+    }
+    setBusy(true);
+    try {
+      await deletePost(deletingPost.id, token);
+      setDeletingPost(null);
+      router.setParams({ aviso: 'Post excluído' });
+      reloadPosts();
+    } catch (err) {
+      setDeletingPost(null);
+      if (handleApiError(err)) return;
+      if (err instanceof ApiError && err.status === 404) {
+        Alert.alert('Post não encontrado', 'Ele pode ter sido excluído.');
+        reloadPosts();
+        return;
+      }
+      Alert.alert('Não foi possível excluir', err instanceof ApiError ? err.message : 'Tente de novo.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function confirmRemove() {
     if (!removing) return;
     const token = requireToken();
@@ -210,7 +261,7 @@ export default function AdminPanel() {
         <Text style={styles.badgeText}>Administração</Text>
       </View>
       <View style={styles.tabs} accessibilityRole="tablist">
-        {(['professores', 'estudantes'] as const).map((t) => (
+        {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
           <Pressable
             key={t}
             onPress={() => setTab(t)}
@@ -219,17 +270,21 @@ export default function AdminPanel() {
             accessibilityState={{ selected: tab === t }}
           >
             <Text style={[styles.tabText, tab === t && styles.tabTextOn]}>
-              {t === 'professores' ? 'Professores' : 'Estudantes'}
+              {TAB_LABELS[t]}
             </Text>
           </Pressable>
         ))}
       </View>
       <Text style={styles.title} accessibilityRole="header">
-        {onStudents ? 'Estudantes' : 'Professores'}
+        {TAB_LABELS[tab]}
       </Text>
       {active.status === 'success' && activeCount > 0 && (
         <Text style={styles.sub}>
-          {onStudents ? studentCountLabel(activeCount) : teacherCountLabel(activeCount, inactiveCount)}
+          {onStudents
+            ? studentCountLabel(activeCount)
+            : onPosts
+              ? postCountLabel(activeCount)
+              : teacherCountLabel(activeCount, inactiveCount)}
         </Text>
       )}
     </View>
@@ -249,11 +304,13 @@ export default function AdminPanel() {
       <StateMessage
         emoji="📡"
         title="Sem conexão com o servidor"
-        message={active.error ?? `Não conseguimos carregar os ${onStudents ? 'estudantes' : 'professores'}.`}
+        message={active.error ?? `Não conseguimos carregar os ${TAB_NOUNS[tab]}.`}
         actionLabel="Tentar de novo"
         onAction={() => active.reload()}
       />
     );
+  } else if (onPosts) {
+    empty = <StateMessage emoji="📝" title="Nenhum post publicado" message="Os posts dos professores aparecem aqui." />;
   } else if (onStudents) {
     empty = (
       <StateMessage
@@ -284,7 +341,14 @@ export default function AdminPanel() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      {onStudents ? (
+      {onPosts ? (
+        <FlatList
+          {...listProps}
+          data={showList ? postsState.posts : []}
+          keyExtractor={(p) => p.id}
+          renderItem={({ item }) => <PostCard post={item} term="" onPress={() => setPost(item)} />}
+        />
+      ) : onStudents ? (
         <FlatList
           {...listProps}
           data={showList ? studentsState.students : []}
@@ -301,7 +365,7 @@ export default function AdminPanel() {
           renderItem={({ item, index }) => <AuthorRow author={item} index={index} onPress={() => setSelected(item)} />}
         />
       )}
-      {!onStudents && (
+      {tab === 'professores' && (
         <Pressable
           style={[styles.fab, { bottom: 24 + insets.bottom }]}
           onPress={() => router.push('/admin/novo')}
@@ -355,6 +419,24 @@ export default function AdminPanel() {
         confirmLabel={confirming?.action === 'reset' ? 'Resetar senha' : 'Excluir'}
         onConfirm={confirmStudent}
         onCancel={() => setConfirming(null)}
+        loading={busy}
+      />
+      <PostActionsSheet
+        post={post}
+        onEdit={openEditPost}
+        onDelete={() => {
+          setDeletingPost(post);
+          setPost(null);
+        }}
+        onClose={() => setPost(null)}
+      />
+      <ConfirmSheet
+        visible={!!deletingPost}
+        title={`Excluir "${deletingPost?.title ?? ''}"?`}
+        message="Não dá para desfazer."
+        confirmLabel="Excluir"
+        onConfirm={confirmDeletePost}
+        onCancel={() => setDeletingPost(null)}
         loading={busy}
       />
       <Toast message={aviso ?? null} onHide={hideToast} />
