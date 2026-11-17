@@ -5,6 +5,11 @@ export function canComment(user: SessionUser | null): boolean {
   return user?.role === 'STUDENT' && !!user.studentId;
 }
 
+/** Estudante com sessão salva antes dos comentários: o app pede para entrar de novo. */
+export function needsRelogin(user: SessionUser | null): boolean {
+  return user?.role === 'STUDENT' && !user.studentId;
+}
+
 export function canEditComment(user: SessionUser | null, comment: Pick<Comment, 'studentId'>): boolean {
   return !!user?.studentId && user.studentId === comment.studentId;
 }

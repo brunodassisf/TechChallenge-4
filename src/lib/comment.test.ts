@@ -1,5 +1,5 @@
 import type { SessionUser } from '@/api/types';
-import { canComment, canDeleteComment, canEditComment } from './comment';
+import { canComment, canDeleteComment, canEditComment, needsRelogin } from './comment';
 
 const aluno: SessionUser = { id: 'u1', name: 'Bia', role: 'STUDENT', authorId: null, studentId: 's1' };
 const outroAluno: SessionUser = { id: 'u2', name: 'Caio', role: 'STUDENT', authorId: null, studentId: 's2' };
@@ -17,6 +17,18 @@ describe('canComment', () => {
   });
   it('sessão antiga sem studentId não comenta', () => {
     expect(canComment({ ...aluno, studentId: undefined })).toBe(false);
+  });
+});
+
+describe('needsRelogin', () => {
+  it('estudante com sessão antiga (sem studentId) precisa entrar de novo', () => {
+    expect(needsRelogin({ ...aluno, studentId: undefined })).toBe(true);
+  });
+  it('estudante atual, outros papéis e visitante não', () => {
+    expect(needsRelogin(aluno)).toBe(false);
+    expect(needsRelogin(prof)).toBe(false);
+    expect(needsRelogin(admin)).toBe(false);
+    expect(needsRelogin(null)).toBe(false);
   });
 });
 

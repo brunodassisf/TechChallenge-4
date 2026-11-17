@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 
@@ -11,14 +11,14 @@ import { Field } from '@/components/Field';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useHandleApiError, useRequireToken } from '@/hooks/useAuthGuard';
 import { useComments } from '@/hooks/useComments';
-import { canComment, canDeleteComment, canEditComment } from '@/lib/comment';
+import { canComment, canDeleteComment, canEditComment, needsRelogin } from '@/lib/comment';
 import { toFormError } from '@/lib/formError';
 import { colors, fonts } from '@/theme';
 
 type Props = { post: Pick<Post, 'id' | 'authorId'> };
 
 export function CommentsSection({ post }: Props) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const handleApiError = useHandleApiError();
   const requireToken = useRequireToken();
   const { status, comments, error, reload } = useComments(post.id);
@@ -131,6 +131,20 @@ export function CommentsSection({ post }: Props) {
             style={styles.input}
           />
           <PrimaryButton label="Enviar" onPress={send} loading={sending} disabled={!draft.trim()} />
+        </View>
+      )}
+
+      {needsRelogin(user) && (
+        <View style={styles.state}>
+          <Text style={styles.muted}>Saia e entre de novo para comentar.</Text>
+          <PrimaryButton
+            label="Entrar de novo"
+            tone="admin"
+            onPress={async () => {
+              await signOut();
+              router.push('/login');
+            }}
+          />
         </View>
       )}
 
