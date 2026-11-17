@@ -1,5 +1,5 @@
 import type { SessionUser } from '@/api/types';
-import { authorName, canCreatePost, canManagePost } from './post';
+import { authorName, canCreatePost, canEditPosts, canManagePost } from './post';
 
 const prof: SessionUser = { id: 'u1', name: 'Ana', role: 'AUTHOR', authorId: 'a1' };
 const aluno: SessionUser = { id: 'u2', name: 'Bia', role: 'STUDENT', authorId: null };
@@ -19,6 +19,12 @@ describe('permissões', () => {
     expect(canManagePost(admin, { authorId: 'a2' })).toBe(true);
     expect(canManagePost(aluno, { authorId: 'a1' })).toBe(false);
     expect(canManagePost(null, { authorId: 'a1' })).toBe(false);
+  });
+  it('tela de edição: só admin ou quem tem perfil de autor', () => {
+    expect(canEditPosts(prof)).toBe(true);
+    expect(canEditPosts(admin)).toBe(true);
+    expect(canEditPosts(aluno)).toBe(false);
+    expect(canEditPosts(null)).toBe(false);
   });
 });
 

@@ -10,6 +10,11 @@ export function canCreatePost(user: SessionUser | null): boolean {
   return !!user?.authorId;
 }
 
+/** Pode abrir a tela de edição; o dono de cada post é conferido nela. */
+export function canEditPosts(user: SessionUser | null): boolean {
+  return user?.role === 'ADMIN' || !!user?.authorId;
+}
+
 export function canManagePost(user: SessionUser | null, post: Pick<Post, 'authorId'>): boolean {
   if (!user) return false;
   if (user.role === 'ADMIN') return true;

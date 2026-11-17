@@ -12,6 +12,7 @@ import { useEffect, useRef } from 'react';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { isAdmin, isStudent } from '@/lib/admin';
+import { canCreatePost, canEditPosts } from '@/lib/post';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -50,9 +51,13 @@ function RootStack() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="login" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="post/novo" options={{ presentation: 'modal' }} />
         <Stack.Screen name="post/[id]/index" />
-        <Stack.Screen name="post/[id]/editar" options={{ presentation: 'modal' }} />
+        <Stack.Protected guard={canCreatePost(user)}>
+          <Stack.Screen name="post/novo" options={{ presentation: 'modal' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={canEditPosts(user)}>
+          <Stack.Screen name="post/[id]/editar" options={{ presentation: 'modal' }} />
+        </Stack.Protected>
         <Stack.Protected guard={isStudent(user)}>
           <Stack.Screen name="perfil" options={{ presentation: 'modal' }} />
         </Stack.Protected>

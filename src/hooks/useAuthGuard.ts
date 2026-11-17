@@ -23,8 +23,7 @@ export function useHandleApiError() {
 
 /**
  * Token válido para uma ação autenticada, ou null. Se a sessão venceu enquanto
- * o app estava aberto, sai da conta e abre o login (a API responde 403, não 401,
- * para PUT/DELETE sem sessão, então não dá para depender só do status).
+ * o app estava aberto, sai da conta e abre o login antes de chamar a API.
  */
 export function useRequireToken() {
   const { session, signOut } = useAuth();
