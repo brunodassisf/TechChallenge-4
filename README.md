@@ -43,7 +43,7 @@ npx tsc --noEmit    # checagem de tipos
 | Rota | Tela |
 |---|---|
 | `/` | Lista de posts com busca por título, texto e autor |
-| `/post/[id]` | Post completo; editar e excluir para o dono ou admin |
+| `/post/[id]` | Post completo; editar e excluir para o dono ou admin; comentários (veja abaixo) |
 | `/post/novo` | Criar post (professor) |
 | `/post/[id]/editar` | Editar post |
 | `/login` | Login com a mesma conta do site do Tech Challenge 3; cadastro de estudante ("Cadastre-se") |
@@ -52,6 +52,10 @@ npx tsc --noEmit    # checagem de tipos
 | `/admin/novo` | Cadastrar professor (só ADMIN) |
 | `/admin/[id]/renomear` | Renomear professor (só ADMIN) |
 | `/admin/estudante/[id]/editar` | Editar nome e e-mail do estudante (só ADMIN) |
+
+## Comentários
+
+Embaixo do post, qualquer pessoa lê os comentários. O estudante logado comenta e edita ou exclui os próprios comentários. O professor dono do post e o admin excluem qualquer comentário dele. Quem já estava logado antes desta versão precisa sair e entrar de novo para comentar.
 
 ## Cadastro de estudante
 
