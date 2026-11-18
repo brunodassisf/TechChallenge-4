@@ -10,7 +10,7 @@ Os dados vêm da API do Tech Challenge 3 (`../techchallenge-3`).
 |---|---|
 | Qualquer pessoa | Ver a lista de posts, buscar por título, texto ou autor e ler o post inteiro com os comentários |
 | Estudante | Criar conta, comentar, editar e excluir os próprios comentários, editar os próprios dados e trocar a senha |
-| Professor | Criar, editar e excluir os próprios posts e excluir comentários dos próprios posts |
+| Professor | Criar, editar e excluir os próprios posts, excluir comentários dos próprios posts, editar os próprios dados e trocar a senha |
 | Admin | Gerenciar professores, estudantes e qualquer post ou comentário |
 
 Telas de criar, editar e de admin só abrem com login. Sem permissão, o app volta para a lista de posts.
