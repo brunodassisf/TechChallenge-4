@@ -18,7 +18,9 @@ const NO_ERROR: FormError = { error: null, fieldErrors: {} };
 const EMPTY: StudentProfileInput = { name: '', email: '', currentPassword: '', password: '', confirmPassword: '' };
 
 export default function Perfil() {
-  const { updateUser } = useAuth();
+  const { session, updateUser } = useAuth();
+  // A rota só abre para estudante ou professor (Stack.Protected em _layout).
+  const role = session?.user.role ?? 'STUDENT';
   const requireToken = useRequireToken();
   const handleApiError = useHandleApiError();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -32,7 +34,7 @@ export default function Perfil() {
     const token = requireToken();
     if (!token) return;
     setStatus('loading');
-    getMyProfile(token)
+    getMyProfile(role, token)
       .then((p) => {
         setOriginalEmail(p.email);
         setForm({ ...EMPTY, name: p.name, email: p.email });
@@ -43,7 +45,7 @@ export default function Perfil() {
         setLoadError(toFormError(err).error);
         setStatus('error');
       });
-  }, [requireToken, handleApiError]);
+  }, [role, requireToken, handleApiError]);
 
   // Uma carga só: depois de updateUser a sessão muda e load ganha nova identidade.
   const started = useRef(false);
@@ -69,7 +71,7 @@ export default function Perfil() {
     setFormError(NO_ERROR);
     try {
       // Campo escondido não vai para a API, mesmo que tenha sobrado texto nele.
-      const user = await updateMyProfile({ ...form, currentPassword: askCurrent ? form.currentPassword : '' }, token);
+      const user = await updateMyProfile(role, { ...form, currentPassword: askCurrent ? form.currentPassword : '' }, token);
       await updateUser(user);
       router.dismissTo({ pathname: '/', params: { aviso: 'Dados atualizados' } });
     } catch (err) {

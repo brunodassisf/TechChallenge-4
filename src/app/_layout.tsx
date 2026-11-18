@@ -11,7 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
-import { isAdmin, isStudent } from '@/lib/admin';
+import { canEditProfile, isAdmin } from '@/lib/admin';
 import { canCreatePost, canEditPosts } from '@/lib/post';
 import { colors } from '@/theme';
 
@@ -58,7 +58,7 @@ function RootStack() {
         <Stack.Protected guard={canEditPosts(user)}>
           <Stack.Screen name="post/[id]/editar" options={{ presentation: 'modal' }} />
         </Stack.Protected>
-        <Stack.Protected guard={isStudent(user)}>
+        <Stack.Protected guard={canEditProfile(user)}>
           <Stack.Screen name="perfil" options={{ presentation: 'modal' }} />
         </Stack.Protected>
         <Stack.Protected guard={isAdmin(user)}>

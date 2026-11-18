@@ -12,7 +12,7 @@ import { Toast } from '@/components/Toast';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePosts } from '@/hooks/usePosts';
 import { initials } from '@/lib/initials';
-import { isAdmin, isStudent } from '@/lib/admin';
+import { canEditProfile, isAdmin } from '@/lib/admin';
 import { canCreatePost } from '@/lib/post';
 import { colors, fonts, radius, space } from '@/theme';
 
@@ -40,7 +40,7 @@ export default function Home() {
     }
     Alert.alert(user.name, 'Deseja sair da conta?', [
       ...(isAdmin(user) ? [{ text: 'Painel', onPress: () => router.dismissTo('/admin') }] : []),
-      ...(isStudent(user) ? [{ text: 'Meus dados', onPress: () => router.push('/perfil') }] : []),
+      ...(canEditProfile(user) ? [{ text: 'Meus dados', onPress: () => router.push('/perfil') }] : []),
       { text: 'Cancelar', style: 'cancel' as const },
       { text: 'Sair', style: 'destructive' as const, onPress: () => signOut() },
     ]);

@@ -70,7 +70,7 @@ npx tsc --noEmit    # checa os tipos
 | `/post/novo` | Novo post (professor) |
 | `/post/[id]/editar` | Editar post (dono ou admin) |
 | `/login` | Entrar ou criar conta de estudante |
-| `/perfil` | Meus dados do estudante |
+| `/perfil` | Meus dados do estudante e do professor |
 | `/admin` | Painel com abas Professores, Estudantes e Posts (admin) |
 | `/admin/novo` | Cadastrar professor (admin) |
 | `/admin/[id]/renomear` | Editar professor (admin) |
@@ -82,7 +82,7 @@ npx tsc --noEmit    # checa os tipos
 
 O estudante cria a conta em "Não tem conta? Cadastre-se", na tela Entrar. Ele escolhe a senha e já entra logado. Não há confirmação de e-mail.
 
-Em Meus dados, pelo menu do avatar, ele muda nome, e-mail e senha. Para mudar e-mail ou senha, o app pede a senha atual.
+Em Meus dados, pelo menu do avatar, o estudante e o professor mudam nome, e-mail e senha. Para mudar e-mail ou senha, o app pede a senha atual.
 
 Professor novo recebe a senha padrão da escola. No primeiro login, o app pede que ele crie a própria senha.
 
@@ -105,7 +105,7 @@ O admin entra direto no Painel. Lá ele tem três abas.
 O app depende destas rotas do Tech Challenge 3:
 
 - Posts: `GET /api/post` (busca `q` também pelo autor, mais novos primeiro), criar, editar e excluir.
-- Login: `POST /api/auth/login` (volta `user` com `id`, `name`, `role` e `authorId`; avisa `FIRST_ACCESS_REQUIRED`) e `POST /api/auth/first-access`.
+- Login: `POST /api/auth/login` (volta `user` com `id`, `name`, `role` e `authorId`; avisa `FIRST_ACCESS_REQUIRED`) e `POST /api/auth/first-access`. Meus dados do professor: `GET` e `PUT /api/author/me`.
 - Professores: `GET /api/author` (com `postCount`), `POST /api/author`, `PATCH /api/author/:id/status` e `DELETE /api/author/:id` (409 se tiver posts).
 - Estudantes: `POST /api/student`, `GET` e `PUT /api/student/me`, e para o admin `GET /api/student`, `PUT` e `DELETE /api/student/[id]` e `POST /api/student/[id]/reset-password`.
 

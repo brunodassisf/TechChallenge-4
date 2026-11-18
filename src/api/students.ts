@@ -1,18 +1,19 @@
 import { ApiError, apiRequest, INVALID_RESPONSE } from './client';
-import type { SessionUser, StudentProfile, StudentProfileInput, StudentInput, StudentSummary } from './types';
+import type { Role, SessionUser, StudentProfile, StudentProfileInput, StudentInput, StudentSummary } from './types';
 
-const ME = '/api/student/me';
+/** "Meus dados": professor usa a rota de autor; estudante, a de estudante. */
+const meUrl = (role: Role) => (role === 'AUTHOR' ? '/api/author/me' : '/api/student/me');
 
-export function getMyProfile(token: string): Promise<StudentProfile> {
-  return apiRequest<StudentProfile>(ME, { token });
+export function getMyProfile(role: Role, token: string): Promise<StudentProfile> {
+  return apiRequest<StudentProfile>(meUrl(role), { token });
 }
 
-export async function updateMyProfile(input: StudentProfileInput, token: string): Promise<SessionUser> {
+export async function updateMyProfile(role: Role, input: StudentProfileInput, token: string): Promise<SessionUser> {
   const body: Record<string, string> = { name: input.name.trim(), email: input.email.trim() };
   for (const key of ['currentPassword', 'password', 'confirmPassword'] as const) {
     if (input[key] !== '') body[key] = input[key];
   }
-  const res = await apiRequest<{ user: SessionUser }>(ME, { method: 'PUT', body, token });
+  const res = await apiRequest<{ user: SessionUser }>(meUrl(role), { method: 'PUT', body, token });
   return res.user;
 }
 

@@ -6,8 +6,9 @@ export function isAdmin(user: SessionUser | null): boolean {
   return user?.role === 'ADMIN';
 }
 
-export function isStudent(user: SessionUser | null): boolean {
-  return user?.role === 'STUDENT';
+/** Quem tem a tela "Meus dados": estudante e professor. */
+export function canEditProfile(user: SessionUser | null): boolean {
+  return user?.role === 'STUDENT' || user?.role === 'AUTHOR';
 }
 
 /** Para onde vai quem acabou de entrar. */

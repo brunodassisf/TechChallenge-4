@@ -7,7 +7,7 @@ import {
   blockedCount,
   homeRouteFor,
   isAdmin,
-  isStudent,
+  canEditProfile,
   postCountLabel,
   sortAuthors,
   studentCountLabel,
@@ -25,11 +25,11 @@ describe('papel', () => {
     expect(isAdmin(aluno)).toBe(false);
     expect(isAdmin(null)).toBe(false);
   });
-  it('isStudent', () => {
-    expect(isStudent(aluno)).toBe(true);
-    expect(isStudent(prof)).toBe(false);
-    expect(isStudent(admin)).toBe(false);
-    expect(isStudent(null)).toBe(false);
+  it('canEditProfile: estudante e professor, não admin', () => {
+    expect(canEditProfile(aluno)).toBe(true);
+    expect(canEditProfile(prof)).toBe(true);
+    expect(canEditProfile(admin)).toBe(false);
+    expect(canEditProfile(null)).toBe(false);
   });
   it('homeRouteFor', () => {
     expect(homeRouteFor(admin)).toBe('/admin');
